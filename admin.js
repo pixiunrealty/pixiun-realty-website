@@ -55,7 +55,7 @@ $('propertyForm').addEventListener('submit', async e => {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) throw new Error('Please sign in again.');
-
+msg.textContent = 'Signed in as: ' + user.email;
     const property = {
       Title: $('title').value.trim(),
       Description: $('description').value.trim(),
