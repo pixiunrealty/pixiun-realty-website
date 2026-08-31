@@ -12,10 +12,7 @@ async function boot() {
 
     supabase = createClient(cfg.url, cfg.key);
 
-    const { data, error } = await supabase.auth.getSession();
-
-    if (error) throw error;
-
+    const { data } = await supabase.auth.getSession();
     setAuth(data.session);
 
     supabase.auth.onAuthStateChange((_event, session) => {
@@ -24,7 +21,7 @@ async function boot() {
 
   } catch (e) {
     $('loginMessage').textContent =
-      'Unable to connect to Supabase: ' + e.message;
+      'Unable to connect to Supabase.';
   }
 }
 
@@ -40,41 +37,14 @@ $('loginForm').addEventListener('submit', async e => {
 
   $('loginMessage').textContent = 'Signing in...';
 
-  const { data, error } =
+  const { error } =
     await supabase.auth.signInWithPassword({
       email: $('email').value,
       password: $('password').value
     });
 
-  if (error) {
-    $('loginMessage').textContent = error.message;
-    return;
-  }
-
-  const session = data.session;
-
-  let tokenRole = 'unknown';
-
-  try {
-    const payload = JSON.parse(
-      atob(
-        session.access_token
-          .split('.')[1]
-          .replace(/-/g, '+')
-          .replace(/_/g, '/')
-      )
-    );
-
-    tokenRole = payload.role || 'no role';
-  } catch (e) {
-    tokenRole = 'could not read token';
-  }
-
   $('loginMessage').textContent =
-    'LOGIN OK | Email: ' +
-    data.user.email +
-    ' | Token role: ' +
-    tokenRole;
+    error ? error.message : '';
 });
 
 $('logoutBtn').addEventListener('click', () => {
@@ -85,6 +55,7 @@ $('propertyForm').addEventListener('submit', async e => {
   e.preventDefault();
 
   const msg = $('propertyMessage');
+  msg.textContent = 'Publishing...';
 
   try {
     const {
@@ -95,43 +66,8 @@ $('propertyForm').addEventListener('submit', async e => {
     if (userError) throw userError;
 
     if (!user) {
-      throw new Error('No authenticated user found.');
+      throw new Error('Please sign in again.');
     }
-
-    const {
-      data: { session },
-      error: sessionError
-    } = await supabase.auth.getSession();
-
-    if (sessionError) throw sessionError;
-
-    if (!session) {
-      throw new Error('No active Supabase session.');
-    }
-
-    let tokenRole = 'unknown';
-
-    try {
-      const payload = JSON.parse(
-        atob(
-          session.access_token
-            .split('.')[1]
-            .replace(/-/g, '+')
-            .replace(/_/g, '/')
-        )
-      );
-
-      tokenRole = payload.role || 'no role';
-    } catch (e) {
-      tokenRole = 'could not read token';
-    }
-
-    msg.textContent =
-      'User: ' +
-      user.email +
-      ' | Supabase role: ' +
-      tokenRole +
-      ' | Publishing...';
 
     const property = {
       Title: $('title').value.trim(),
@@ -145,27 +81,56 @@ $('propertyForm').addEventListener('submit', async e => {
       Square_feet: Number($('squareFeet').value)
     };
 
-    const { data: row, error } =
-      await supabase
-        .from('Properties')
-        .insert(property)
-        .select()
-        .single();
+    const {
+      data: row,
+      error
+    } = await supabase
+      .from('Properties')
+      .insert(property)
+      .select()
+      .single();
 
-    if (error) {
-      throw new Error(
-        'INSERT FAILED | Supabase role: ' +
-        tokenRole +
-        ' | ' +
-        error.message
-      );
+    if (error) throw error;
+
+    const files = [...$('photos').files];
+
+    for (const file of files) {
+      const safe = file.name
+        .toLowerCase()
+        .replace(/[^a-z0-9._-]/g, '-');
+
+      const path =
+        `${row.id}/${crypto.randomUUID()}-${safe}`;
+
+      const upload = await supabase.storage
+        .from('property-images')
+        .upload(path, file, {
+          upsert: false,
+          contentType: file.type
+        });
+
+      if (upload.error) throw upload.error;
+
+      const { data: urlData } =
+        supabase.storage
+          .from('property-images')
+          .getPublicUrl(path);
+
+      const { error: imageError } =
+        await supabase
+          .from('property_images')
+          .insert({
+            property_id: row.id,
+            image_url: urlData.publicUrl
+          });
+
+      if (imageError) throw imageError;
     }
 
     msg.textContent =
-      'Property inserted successfully.';
+      'Property published successfully.';
 
     $('propertyForm').reset();
-
     loadAdminListings();
 
   } catch (err) {
