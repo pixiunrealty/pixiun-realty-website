@@ -12,14 +12,19 @@ async function boot() {
 
     supabase = createClient(cfg.url, cfg.key);
 
-    const { data } = await supabase.auth.getSession();
+    const { data, error } = await supabase.auth.getSession();
+
+    if (error) throw error;
+
     setAuth(data.session);
 
     supabase.auth.onAuthStateChange((_event, session) => {
       setAuth(session);
     });
+
   } catch (e) {
-    $('loginMessage').textContent = 'Unable to connect to Supabase.';
+    $('loginMessage').textContent =
+      'Unable to connect to Supabase: ' + e.message;
   }
 }
 
@@ -35,27 +40,56 @@ $('loginForm').addEventListener('submit', async e => {
 
   $('loginMessage').textContent = 'Signing in...';
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: $('email').value,
     password: $('password').value
   });
 
-  $('loginMessage').textContent = error ? error.message : '';
+  if (error) {
+    $('loginMessage').textContent = error.message;
+    return;
+  }
+
+  $('loginMessage').textContent =
+    'Signed in successfully as ' + data.user.email;
 });
 
-$('logoutBtn').addEventListener('click', () => supabase.auth.signOut());
+$('logoutBtn').addEventListener('click', () => {
+  supabase.auth.signOut();
+});
 
 $('propertyForm').addEventListener('submit', async e => {
   e.preventDefault();
 
   const msg = $('propertyMessage');
-  msg.textContent = 'Publishing...';
+  msg.textContent = 'Checking authentication...';
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser();
 
-    if (!user) throw new Error('Please sign in again.');
-msg.textContent = 'Signed in as: ' + user.email;
+    if (userError) throw userError;
+
+    if (!user) {
+      throw new Error('No authenticated user found.');
+    }
+
+    const {
+      data: { session },
+      error: sessionError
+    } = await supabase.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
+    if (!session) {
+      throw new Error('No active Supabase session found.');
+    }
+
+    msg.textContent =
+      'Authenticated as ' + user.email + '. Publishing...';
+
     const property = {
       Title: $('title').value.trim(),
       Description: $('description').value.trim(),
@@ -74,7 +108,11 @@ msg.textContent = 'Signed in as: ' + user.email;
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      throw new Error(
+        'INSERT FAILED: ' + error.message
+      );
+    }
 
     const files = [...$('photos').files];
 
@@ -83,7 +121,8 @@ msg.textContent = 'Signed in as: ' + user.email;
         .toLowerCase()
         .replace(/[^a-z0-9._-]/g, '-');
 
-      const path = `${row.id}/${crypto.randomUUID()}-${safe}`;
+      const path =
+        `${row.id}/${crypto.randomUUID()}-${safe}`;
 
       const upload = await supabase.storage
         .from('property-images')
@@ -108,12 +147,15 @@ msg.textContent = 'Signed in as: ' + user.email;
       if (imageError) throw imageError;
     }
 
-    msg.textContent = 'Property published successfully.';
+    msg.textContent =
+      'Property published successfully.';
+
     $('propertyForm').reset();
     loadAdminListings();
 
   } catch (err) {
-    msg.textContent = err.message || 'Could not publish property.';
+    msg.textContent =
+      err.message || 'Could not publish property.';
   }
 });
 
@@ -126,7 +168,8 @@ async function loadAdminListings() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    box.innerHTML = '<p class="form-message">Could not load listings.</p>';
+    box.innerHTML =
+      '<p class="form-message">Could not load listings.</p>';
     return;
   }
 
