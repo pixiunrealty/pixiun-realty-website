@@ -55,9 +55,10 @@ $('propertyForm').addEventListener('submit', async e => {
   e.preventDefault();
 
   const msg = $('propertyMessage');
-  msg.textContent = 'Publishing...';
 
   try {
+    msg.textContent = 'Step 1/3: Publishing property...';
+
     const {
       data: { user },
       error: userError
@@ -81,18 +82,104 @@ $('propertyForm').addEventListener('submit', async e => {
       Square_feet: Number($('squareFeet').value)
     };
 
-    const { error } =
+    const { error: propertyError } =
       await supabase
         .from('Properties')
         .insert(property);
 
-    if (error) throw error;
+    if (propertyError) {
+      throw new Error(
+        'PROPERTY INSERT FAILED: ' +
+        propertyError.message
+      );
+    }
+
+    msg.textContent = 'Step 2/3: Property saved. Checking photo...';
+
+    const files = [...$('photos').files];
+
+    if (files.length === 0) {
+      msg.textContent =
+        'Property published successfully. No photo selected.';
+      $('propertyForm').reset();
+      await loadAdminListings();
+      return;
+    }
+
+    const {
+      data: latestProperty,
+      error: findError
+    } = await supabase
+      .from('Properties')
+      .select('id')
+      .eq('Title', property.Title)
+      .eq('Location', property.Location)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (findError) {
+      throw new Error(
+        'COULD NOT FIND PROPERTY ID: ' +
+        findError.message
+      );
+    }
+
+    for (const file of files) {
+
+      msg.textContent =
+        'Step 2/3: Uploading photo...';
+
+      const safe = file.name
+        .toLowerCase()
+        .replace(/[^a-z0-9._-]/g, '-');
+
+      const path =
+        `${latestProperty.id}/${crypto.randomUUID()}-${safe}`;
+
+      const { error: uploadError } =
+        await supabase.storage
+          .from('property-images')
+          .upload(path, file, {
+            upsert: false,
+            contentType: file.type
+          });
+
+      if (uploadError) {
+        throw new Error(
+          'PHOTO UPLOAD FAILED: ' +
+          uploadError.message
+        );
+      }
+
+      msg.textContent =
+        'Step 3/3: Saving photo information...';
+
+      const { data: urlData } =
+        supabase.storage
+          .from('property-images')
+          .getPublicUrl(path);
+
+      const { error: imageError } =
+        await supabase
+          .from('property_images')
+          .insert({
+            property_id: latestProperty.id,
+            image_url: urlData.publicUrl
+          });
+
+      if (imageError) {
+        throw new Error(
+          'PHOTO RECORD FAILED: ' +
+          imageError.message
+        );
+      }
+    }
 
     msg.textContent =
-      'Property published successfully.';
+      'Property and photo published successfully.';
 
     $('propertyForm').reset();
-
     await loadAdminListings();
 
   } catch (err) {
