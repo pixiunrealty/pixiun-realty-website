@@ -55,10 +55,9 @@ $('propertyForm').addEventListener('submit', async e => {
   e.preventDefault();
 
   const msg = $('propertyMessage');
+  msg.textContent = 'Publishing property...';
 
   try {
-    msg.textContent = 'Step 1/3: Publishing property...';
-
     const {
       data: { user },
       error: userError
@@ -82,10 +81,19 @@ $('propertyForm').addEventListener('submit', async e => {
       Square_feet: Number($('squareFeet').value)
     };
 
-    const { error: propertyError } =
-      await supabase
-        .from('Properties')
-        .insert(property);
+    /*
+      Insert the property and request ONLY the generated ID.
+      This avoids requesting the entire row.
+    */
+
+    const {
+      data: insertedProperty,
+      error: propertyError
+    } = await supabase
+      .from('Properties')
+      .insert(property)
+      .select('id')
+      .single();
 
     if (propertyError) {
       throw new Error(
@@ -94,62 +102,39 @@ $('propertyForm').addEventListener('submit', async e => {
       );
     }
 
-    msg.textContent = 'Step 2/3: Property saved. Checking photo...';
+    const propertyId = insertedProperty.id;
 
     const files = [...$('photos').files];
-
-if (files.length === 0) {
-  throw new Error(
-    'NO PHOTO DETECTED — the website did not receive the selected image.'
-  );
-}
 
     if (files.length === 0) {
       msg.textContent =
         'Property published successfully. No photo selected.';
+
       $('propertyForm').reset();
       await loadAdminListings();
       return;
     }
 
-    const {
-      data: latestProperty,
-      error: findError
-    } = await supabase
-      .from('Properties')
-      .select('id')
-      .eq('Title', property.Title)
-      .eq('Location', property.Location)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (findError) {
-      throw new Error(
-        'COULD NOT FIND PROPERTY ID: ' +
-        findError.message
-      );
-    }
+    msg.textContent =
+      `Property saved. Uploading ${files.length} photo(s)...`;
 
     for (const file of files) {
-
-      msg.textContent =
-        'Step 2/3: Uploading photo...';
 
       const safe = file.name
         .toLowerCase()
         .replace(/[^a-z0-9._-]/g, '-');
 
       const path =
-        `${latestProperty.id}/${crypto.randomUUID()}-${safe}`;
+        `${propertyId}/${crypto.randomUUID()}-${safe}`;
 
-      const { error: uploadError } =
-        await supabase.storage
-          .from('property-images')
-          .upload(path, file, {
-            upsert: false,
-            contentType: file.type
-          });
+      const {
+        error: uploadError
+      } = await supabase.storage
+        .from('property-images')
+        .upload(path, file, {
+          upsert: false,
+          contentType: file.type
+        });
 
       if (uploadError) {
         throw new Error(
@@ -158,21 +143,20 @@ if (files.length === 0) {
         );
       }
 
-      msg.textContent =
-        'Step 3/3: Saving photo information...';
+      const {
+        data: urlData
+      } = supabase.storage
+        .from('property-images')
+        .getPublicUrl(path);
 
-      const { data: urlData } =
-        supabase.storage
-          .from('property-images')
-          .getPublicUrl(path);
-
-      const { error: imageError } =
-        await supabase
-          .from('property_images')
-          .insert({
-            property_id: latestProperty.id,
-            image_url: urlData.publicUrl
-          });
+      const {
+        error: imageError
+      } = await supabase
+        .from('property_images')
+        .insert({
+          property_id: propertyId,
+          image_url: urlData.publicUrl
+        });
 
       if (imageError) {
         throw new Error(
@@ -183,9 +167,10 @@ if (files.length === 0) {
     }
 
     msg.textContent =
-      'Property and photo published successfully.';
+      'Property and photo(s) published successfully.';
 
     $('propertyForm').reset();
+
     await loadAdminListings();
 
   } catch (err) {
@@ -198,13 +183,15 @@ if (files.length === 0) {
 async function loadAdminListings() {
   const box = $('adminListings');
 
-  const { data, error } =
-    await supabase
-      .from('Properties')
-      .select('*')
-      .order('created_at', {
-        ascending: false
-      });
+  const {
+    data,
+    error
+  } = await supabase
+    .from('Properties')
+    .select('*')
+    .order('created_at', {
+      ascending: false
+    });
 
   if (error) {
     box.innerHTML =
