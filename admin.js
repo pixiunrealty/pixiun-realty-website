@@ -98,6 +98,12 @@ $('propertyForm').addEventListener('submit', async e => {
 
     const files = [...$('photos').files];
 
+if (files.length === 0) {
+  throw new Error(
+    'NO PHOTO DETECTED — the website did not receive the selected image.'
+  );
+}
+
     if (files.length === 0) {
       msg.textContent =
         'Property published successfully. No photo selected.';
