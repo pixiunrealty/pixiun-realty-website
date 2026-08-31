@@ -5,12 +5,14 @@ let supabase = null;
 
 async function boot() {
   try {
-    const r = await fetch('/api/config');
-    const cfg = await r.json();
+    const response = await fetch('/api/config');
+    const config = await response.json();
 
-    if (!r.ok) throw new Error(cfg.error);
+    if (!response.ok) {
+      throw new Error(config.error || 'Configuration failed.');
+    }
 
-    supabase = createClient(cfg.url, cfg.key);
+    supabase = createClient(config.url, config.key);
 
     const { data } = await supabase.auth.getSession();
     setAuth(data.session);
@@ -19,7 +21,7 @@ async function boot() {
       setAuth(session);
     });
 
-  } catch (e) {
+  } catch (error) {
     $('loginMessage').textContent =
       'Unable to connect to Supabase.';
   }
@@ -29,11 +31,13 @@ function setAuth(session) {
   $('loginPanel').classList.toggle('hidden', !!session);
   $('adminPanel').classList.toggle('hidden', !session);
 
-  if (session) loadAdminListings();
+  if (session) {
+    loadAdminListings();
+  }
 }
 
-$('loginForm').addEventListener('submit', async e => {
-  e.preventDefault();
+$('loginForm').addEventListener('submit', async event => {
+  event.preventDefault();
 
   $('loginMessage').textContent = 'Signing in...';
 
@@ -47,15 +51,15 @@ $('loginForm').addEventListener('submit', async e => {
     error ? error.message : '';
 });
 
-$('logoutBtn').addEventListener('click', () => {
-  supabase.auth.signOut();
+$('logoutBtn').addEventListener('click', async () => {
+  await supabase.auth.signOut();
 });
 
-$('propertyForm').addEventListener('submit', async e => {
-  e.preventDefault();
+$('propertyForm').addEventListener('submit', async event => {
+  event.preventDefault();
 
-  const msg = $('propertyMessage');
-  msg.textContent = 'Publishing property...';
+  const message = $('propertyMessage');
+  message.textContent = 'Publishing property...';
 
   try {
     const {
@@ -63,10 +67,18 @@ $('propertyForm').addEventListener('submit', async e => {
       error: userError
     } = await supabase.auth.getUser();
 
-    if (userError) throw userError;
+    if (userError) {
+      throw userError;
+    }
 
     if (!user) {
       throw new Error('Please sign in again.');
+    }
+
+    const files = Array.from($('photos').files);
+
+    if (files.length === 0) {
+      throw new Error('Please select at least one property photo.');
     }
 
     const property = {
@@ -82,8 +94,8 @@ $('propertyForm').addEventListener('submit', async e => {
     };
 
     /*
-      Insert the property and request ONLY the generated ID.
-      This avoids requesting the entire row.
+      STEP 1
+      Create the property and get only its ID.
     */
 
     const {
@@ -104,34 +116,29 @@ $('propertyForm').addEventListener('submit', async e => {
 
     const propertyId = insertedProperty.id;
 
-    const files = [...$('photos').files];
-
-    if (files.length === 0) {
-      msg.textContent =
-        'Property published successfully. No photo selected.';
-
-      $('propertyForm').reset();
-      await loadAdminListings();
-      return;
-    }
-
-    msg.textContent =
-      `Property saved. Uploading ${files.length} photo(s)...`;
+    /*
+      STEP 2
+      Upload each selected image to Storage.
+    */
 
     for (const file of files) {
 
-      const safe = file.name
+      message.textContent =
+        `Uploading photo ${files.indexOf(file) + 1} of ${files.length}...`;
+
+      const safeFileName = file.name
         .toLowerCase()
         .replace(/[^a-z0-9._-]/g, '-');
 
-      const path =
-        `${propertyId}/${crypto.randomUUID()}-${safe}`;
+      const filePath =
+        `${propertyId}/${crypto.randomUUID()}-${safeFileName}`;
 
       const {
         error: uploadError
       } = await supabase.storage
         .from('property-images')
-        .upload(path, file, {
+        .upload(filePath, file, {
+          cacheControl: '3600',
           upsert: false,
           contentType: file.type
         });
@@ -143,19 +150,37 @@ $('propertyForm').addEventListener('submit', async e => {
         );
       }
 
+      /*
+        STEP 3
+        Get the public URL for the uploaded image.
+      */
+
       const {
-        data: urlData
+        data: publicUrlData
       } = supabase.storage
         .from('property-images')
-        .getPublicUrl(path);
+        .getPublicUrl(filePath);
+
+      if (!publicUrlData?.publicUrl) {
+        throw new Error(
+          'Could not create the photo URL.'
+        );
+      }
+
+      /*
+        STEP 4
+        Save the image information in the
+        actual table in your database:
+        "Property _image"
+      */
 
       const {
         error: imageError
       } = await supabase
-        .from('property_images')
+        .from('Property _image')
         .insert({
-          property_id: propertyId,
-          image_url: urlData.publicUrl
+          Property_id: propertyId,
+          Image_url: publicUrlData.publicUrl
         });
 
       if (imageError) {
@@ -166,22 +191,24 @@ $('propertyForm').addEventListener('submit', async e => {
       }
     }
 
-    msg.textContent =
+    message.textContent =
       'Property and photo(s) published successfully.';
 
     $('propertyForm').reset();
 
     await loadAdminListings();
 
-  } catch (err) {
-    msg.textContent =
-      err.message ||
+  } catch (error) {
+
+    message.textContent =
+      error.message ||
       'Could not publish property.';
   }
 });
 
 async function loadAdminListings() {
-  const box = $('adminListings');
+
+  const listingsBox = $('adminListings');
 
   const {
     data,
@@ -194,44 +221,54 @@ async function loadAdminListings() {
     });
 
   if (error) {
-    box.innerHTML =
+
+    listingsBox.innerHTML =
       '<p class="form-message">Could not load listings.</p>';
+
     return;
   }
 
-  box.innerHTML =
+  listingsBox.innerHTML =
     `<h2>Your listings (${data.length})</h2>` +
-    data.map(p =>
-      `<div class="admin-listing">
-        <strong>${esc(p.Title)}</strong>
-        <span>${money(p.Price)} · ${esc(p.Location)} · ${esc(p.Status)}</span>
-      </div>`
-    ).join('');
+    data.map(property => `
+      <div class="admin-listing">
+        <strong>${escapeHtml(property.Title)}</strong>
+        <span>
+          ${formatMoney(property.Price)}
+          · ${escapeHtml(property.Location)}
+          · ${escapeHtml(property.Status)}
+        </span>
+      </div>
+    `).join('');
 }
 
-function esc(v) {
-  return String(v ?? '').replace(
+function escapeHtml(value) {
+
+  return String(value ?? '').replace(
     /[&<>"']/g,
-    c => ({
+    character => ({
       '&': '&amp;',
       '<': '&lt;',
       '>': '&gt;',
       '"': '&quot;',
       "'": '&#039;'
-    }[c])
+    }[character])
   );
 }
 
-function money(v) {
-  const n = Number(v);
+function formatMoney(value) {
 
-  return Number.isFinite(n)
-    ? new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        maximumFractionDigits: 0
-      }).format(n)
-    : '';
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return '';
+  }
+
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0
+  }).format(number);
 }
 
 boot();
