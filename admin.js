@@ -57,15 +57,15 @@ $('propertyForm').addEventListener('submit', async e => {
     if (!user) throw new Error('Please sign in again.');
 
     const property = {
-      title: $('title').value.trim(),
-      description: $('description').value.trim(),
-      price: Number($('price').value),
-      location: $('location').value.trim(),
-      property_type: $('propertyType').value,
-      status: $('status').value,
-      bedrooms: Number($('bedrooms').value),
-      bathrooms: Number($('bathrooms').value),
-      square_feet: Number($('squareFeet').value)
+      Title: $('title').value.trim(),
+      Description: $('description').value.trim(),
+      Price: Number($('price').value),
+      Location: $('location').value.trim(),
+      Property_type: $('propertyType').value,
+      Status: $('status').value,
+      Bedrooms: Number($('bedrooms').value),
+      Bathrooms: Number($('bathrooms').value),
+      Square_feet: Number($('squareFeet').value)
     };
 
     const { data: row, error } = await supabase
@@ -134,8 +134,8 @@ async function loadAdminListings() {
     `<h2>Your listings (${data.length})</h2>` +
     data.map(p =>
       `<div class="admin-listing">
-        <strong>${esc(p.title)}</strong>
-        <span>${money(p.price)} · ${esc(p.location)} · ${esc(p.status)}</span>
+        <strong>${esc(p.Title)}</strong>
+        <span>${money(p.Price)} · ${esc(p.Location)} · ${esc(p.Status)}</span>
       </div>`
     ).join('');
 }
