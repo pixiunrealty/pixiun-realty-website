@@ -33,10 +33,7 @@ function normalizeProperty(property) {
   return {
     id: property.id,
 
-    title:
-      property.Title ??
-      property.title ??
-      "Property",
+    title: property.Title ?? property.title ?? "Property",
 
     description:
       property.Description ??
@@ -79,8 +76,9 @@ function normalizeProperty(property) {
       0,
 
     image_urls:
-      property.image_urls ??
-      [],
+      Array.isArray(property.image_urls)
+        ? property.image_urls
+        : [],
 
     image_url:
       property.image_url ??
@@ -107,19 +105,33 @@ function render(list) {
     card.className = "property";
 
     const image =
-      (p.image_urls && p.image_urls[0]) ||
-      p.image_url ||
-      "";
+      p.image_urls.length > 0
+        ? p.image_urls[0]
+        : p.image_url;
 
-    const imageStyle = image
-      ? `style="background-image:url('${esc(image)}')"`
-      : "";
+    let imageHTML = "";
+
+    if (image) {
+      imageHTML = `
+        <div class="property-img">
+          <img
+            src="${esc(image)}"
+            alt="${esc(p.title)}"
+            loading="lazy"
+            onerror="this.style.display='none'; this.parentElement.classList.add('image-error');"
+          >
+        </div>
+      `;
+    } else {
+      imageHTML = `
+        <div class="property-img image-error">
+          <span>No photo available</span>
+        </div>
+      `;
+    }
 
     card.innerHTML = `
-      <div
-        class="property-img"
-        ${imageStyle}
-      ></div>
+      ${imageHTML}
 
       <div class="property-body">
 
@@ -186,13 +198,13 @@ async function loadProperties() {
     const properties =
       await response.json();
 
-    allProperties = properties.map(
-      normalizeProperty
-    );
+    allProperties =
+      properties.map(normalizeProperty);
 
     render(allProperties);
 
   } catch (error) {
+
     console.error(
       "Property loading error:",
       error
@@ -213,23 +225,21 @@ function search() {
       .toLowerCase();
 
   const type =
-    document.getElementById(
-      "searchType"
-    ).value;
+    document.getElementById("searchType").value;
 
   const maxPrice =
     Number(
-      document.getElementById(
-        "searchPrice"
-      ).value || 0
+      document.getElementById("searchPrice").value || 0
     );
 
   const filtered =
     allProperties.filter(property => {
+
       const p =
         normalizeProperty(property);
 
       return (
+
         (
           !location ||
           String(p.location)
@@ -253,6 +263,7 @@ function search() {
           Number(p.price || 0)
             <= maxPrice
         )
+
       );
     });
 
@@ -273,6 +284,7 @@ document
   .addEventListener(
     "submit",
     event => {
+
       event.preventDefault();
 
       document.getElementById(
