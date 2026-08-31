@@ -1,1 +1,283 @@
-const grid=document.getElementById("propertyGrid"),empty=document.getElementById("emptyState"),count=document.getElementById("listingCount");let allProperties=[];function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}function money(v){const n=Number(v);return Number.isFinite(n)?new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(n):""}function render(list){count.textContent=`${list.length} listing${list.length===1?"":"s"}`;grid.innerHTML="";empty.classList.toggle("hidden",list.length!==0);list.forEach(p=>{const card=document.createElement("article");card.className="property";const image=(p.image_urls&&p.image_urls[0])||p.image_url||p.image||"";const style=image?`style="background-image:url('${esc(image)}')"`:"";card.innerHTML=`<div class="property-img" ${style}></div><div class="property-body"><span class="status">${esc(p.status||"For Sale")}</span><div class="property-top"><div class="property-title">${esc(p.title||"Property")}</div><div class="price">${money(p.price)}</div></div><div class="property-location">${esc(p.location||"United States")}</div><div class="stats"><span>🛏 ${esc(p.bedrooms??0)} beds</span><span>🛁 ${esc(p.bathrooms??0)} baths</span><span>📐 ${esc(p.square_feet??0)} sqft</span></div></div>`;grid.appendChild(card)})}async function loadProperties(){try{const res=await fetch("/api/properties",{headers:{Accept:"application/json"}});if(!res.ok)throw new Error();allProperties=await res.json();render(allProperties)}catch(e){allProperties=[{title:"Modern Family Home",price:425000,location:"Houston, Texas",property_type:"House",status:"For Sale",bedrooms:4,bathrooms:3,square_feet:2450},{title:"Downtown Apartment",price:3200,location:"Miami, Florida",property_type:"Apartment",status:"For Rent",bedrooms:2,bathrooms:2,square_feet:1180}];render(allProperties)}}function search(){const loc=document.getElementById("searchLocation").value.trim().toLowerCase(),type=document.getElementById("searchType").value,max=Number(document.getElementById("searchPrice").value||0);render(allProperties.filter(p=>(!loc||String(p.location||"").toLowerCase().includes(loc))&&(!type||String(p.property_type||"").toLowerCase()===type.toLowerCase())&&(!max||Number(p.price||0)<=max)))}document.getElementById("searchBtn").addEventListener("click",search);loadProperties();document.getElementById("contactForm").addEventListener("submit",e=>{e.preventDefault();document.getElementById("formMessage").textContent="Thanks — your inquiry is ready. Connect this form to your preferred email/CRM when you're ready to receive leads."});
+const grid = document.getElementById("propertyGrid");
+const empty = document.getElementById("emptyState");
+const count = document.getElementById("listingCount");
+
+let allProperties = [];
+
+function esc(value) {
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    character => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    }[character])
+  );
+}
+
+function money(value) {
+  const number = Number(value);
+
+  return Number.isFinite(number)
+    ? new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0
+      }).format(number)
+    : "";
+}
+
+function normalizeProperty(property) {
+  return {
+    id: property.id,
+
+    title:
+      property.Title ??
+      property.title ??
+      "Property",
+
+    description:
+      property.Description ??
+      property.description ??
+      "",
+
+    price:
+      property.Price ??
+      property.price ??
+      0,
+
+    location:
+      property.Location ??
+      property.location ??
+      "",
+
+    property_type:
+      property.Property_type ??
+      property.property_type ??
+      "",
+
+    status:
+      property.Status ??
+      property.status ??
+      "For Sale",
+
+    bedrooms:
+      property.Bedrooms ??
+      property.bedrooms ??
+      0,
+
+    bathrooms:
+      property.Bathrooms ??
+      property.bathrooms ??
+      0,
+
+    square_feet:
+      property.Square_feet ??
+      property.square_feet ??
+      0,
+
+    image_urls:
+      property.image_urls ??
+      [],
+
+    image_url:
+      property.image_url ??
+      ""
+  };
+}
+
+function render(list) {
+  count.textContent =
+    `${list.length} listing${list.length === 1 ? "" : "s"}`;
+
+  grid.innerHTML = "";
+
+  empty.classList.toggle(
+    "hidden",
+    list.length !== 0
+  );
+
+  list.forEach(property => {
+    const p = normalizeProperty(property);
+
+    const card = document.createElement("article");
+
+    card.className = "property";
+
+    const image =
+      (p.image_urls && p.image_urls[0]) ||
+      p.image_url ||
+      "";
+
+    const imageStyle = image
+      ? `style="background-image:url('${esc(image)}')"`
+      : "";
+
+    card.innerHTML = `
+      <div
+        class="property-img"
+        ${imageStyle}
+      ></div>
+
+      <div class="property-body">
+
+        <span class="status">
+          ${esc(p.status)}
+        </span>
+
+        <div class="property-top">
+
+          <div class="property-title">
+            ${esc(p.title)}
+          </div>
+
+          <div class="price">
+            ${money(p.price)}
+          </div>
+
+        </div>
+
+        <div class="property-location">
+          ${esc(p.location)}
+        </div>
+
+        <div class="stats">
+
+          <span>
+            🛏 ${esc(p.bedrooms)} beds
+          </span>
+
+          <span>
+            🛁 ${esc(p.bathrooms)} baths
+          </span>
+
+          <span>
+            📐 ${esc(p.square_feet)} sqft
+          </span>
+
+        </div>
+
+      </div>
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+async function loadProperties() {
+  try {
+    const response = await fetch(
+      "/api/properties",
+      {
+        headers: {
+          Accept: "application/json"
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        "Unable to load properties."
+      );
+    }
+
+    const properties =
+      await response.json();
+
+    allProperties = properties.map(
+      normalizeProperty
+    );
+
+    render(allProperties);
+
+  } catch (error) {
+    console.error(
+      "Property loading error:",
+      error
+    );
+
+    allProperties = [];
+
+    render([]);
+  }
+}
+
+function search() {
+  const location =
+    document
+      .getElementById("searchLocation")
+      .value
+      .trim()
+      .toLowerCase();
+
+  const type =
+    document.getElementById(
+      "searchType"
+    ).value;
+
+  const maxPrice =
+    Number(
+      document.getElementById(
+        "searchPrice"
+      ).value || 0
+    );
+
+  const filtered =
+    allProperties.filter(property => {
+      const p =
+        normalizeProperty(property);
+
+      return (
+        (
+          !location ||
+          String(p.location)
+            .toLowerCase()
+            .includes(location)
+        )
+
+        &&
+
+        (
+          !type ||
+          String(p.property_type)
+            .toLowerCase()
+            === type.toLowerCase()
+        )
+
+        &&
+
+        (
+          !maxPrice ||
+          Number(p.price || 0)
+            <= maxPrice
+        )
+      );
+    });
+
+  render(filtered);
+}
+
+document
+  .getElementById("searchBtn")
+  .addEventListener(
+    "click",
+    search
+  );
+
+loadProperties();
+
+document
+  .getElementById("contactForm")
+  .addEventListener(
+    "submit",
+    event => {
+      event.preventDefault();
+
+      document.getElementById(
+        "formMessage"
+      ).textContent =
+        "Thanks — your inquiry is ready. Connect this form to your preferred email/CRM when you're ready to receive leads.";
+    }
+  );
