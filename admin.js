@@ -81,57 +81,19 @@ $('propertyForm').addEventListener('submit', async e => {
       Square_feet: Number($('squareFeet').value)
     };
 
-    const {
-      data: row,
-      error
-    } = await supabase
-      .from('Properties')
-      .insert(property)
-      .select()
-      .single();
+    const { error } =
+      await supabase
+        .from('Properties')
+        .insert(property);
 
     if (error) throw error;
-
-    const files = [...$('photos').files];
-
-    for (const file of files) {
-      const safe = file.name
-        .toLowerCase()
-        .replace(/[^a-z0-9._-]/g, '-');
-
-      const path =
-        `${row.id}/${crypto.randomUUID()}-${safe}`;
-
-      const upload = await supabase.storage
-        .from('property-images')
-        .upload(path, file, {
-          upsert: false,
-          contentType: file.type
-        });
-
-      if (upload.error) throw upload.error;
-
-      const { data: urlData } =
-        supabase.storage
-          .from('property-images')
-          .getPublicUrl(path);
-
-      const { error: imageError } =
-        await supabase
-          .from('property_images')
-          .insert({
-            property_id: row.id,
-            image_url: urlData.publicUrl
-          });
-
-      if (imageError) throw imageError;
-    }
 
     msg.textContent =
       'Property published successfully.';
 
     $('propertyForm').reset();
-    loadAdminListings();
+
+    await loadAdminListings();
 
   } catch (err) {
     msg.textContent =
