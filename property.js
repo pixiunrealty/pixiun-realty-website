@@ -1,17 +1,22 @@
-const loading = document.getElementById("propertyLoading");
-const errorBox = document.getElementById("propertyError");
-const content = document.getElementById("propertyContent");
+const loadingEl = document.getElementById("propertyLoading");
+const errorBoxEl = document.getElementById("propertyError");
+const contentEl = document.getElementById("propertyContent");
 
-const gallery = document.getElementById("propertyGallery");
-const title = document.getElementById("propertyTitle");
-const location = document.getElementById("propertyLocation");
-const status = document.getElementById("propertyStatus");
-const price = document.getElementById("propertyPrice");
-const description = document.getElementById("propertyDescription");
-const stats = document.getElementById("propertyStats");
+const galleryEl = document.getElementById("propertyGallery");
+const titleEl = document.getElementById("propertyTitle");
+const locationEl = document.getElementById("propertyLocation");
+const statusEl = document.getElementById("propertyStatus");
+const priceEl = document.getElementById("propertyPrice");
+const descriptionEl = document.getElementById("propertyDescription");
+const statsEl = document.getElementById("propertyStats");
 
-const inquiryForm = document.getElementById("propertyInquiryForm");
-const formMessage = document.getElementById("propertyFormMessage");
+const inquiryFormEl = document.getElementById("propertyInquiryForm");
+const formMessageEl = document.getElementById("propertyFormMessage");
+
+
+/* =========================
+   MONEY FORMAT
+========================= */
 
 function money(value) {
   const number = Number(value);
@@ -27,6 +32,11 @@ function money(value) {
   }).format(number);
 }
 
+
+/* =========================
+   GET PROPERTY ID
+========================= */
+
 function getPropertyId() {
   const params = new URLSearchParams(
     window.location.search
@@ -35,20 +45,32 @@ function getPropertyId() {
   return params.get("id");
 }
 
+
+/* =========================
+   SHOW ERROR
+========================= */
+
 function showError(message) {
-  if (loading) {
-    loading.classList.add("hidden");
+
+  if (loadingEl) {
+    loadingEl.classList.add("hidden");
   }
 
-  if (content) {
-    content.classList.add("hidden");
+  if (contentEl) {
+    contentEl.classList.add("hidden");
   }
 
-  if (errorBox) {
-    errorBox.textContent = message;
-    errorBox.classList.remove("hidden");
+  if (errorBoxEl) {
+    errorBoxEl.textContent = message;
+    errorBoxEl.classList.remove("hidden");
   }
+
 }
+
+
+/* =========================
+   SHOW PROPERTY
+========================= */
 
 function showProperty(property) {
 
@@ -98,44 +120,59 @@ function showProperty(property) {
     0;
 
 
+  /* =========================
+     GET IMAGES
+  ========================= */
+
   let images = [];
 
-  if (
-    Array.isArray(property.image_urls)
-  ) {
-    images =
-      property.image_urls.filter(
-        image => image
-      );
+  if (Array.isArray(property.image_urls)) {
+
+    images = property.image_urls.filter(
+      image =>
+        typeof image === "string" &&
+        image.trim() !== ""
+    );
+
   }
 
   if (
     images.length === 0 &&
     property.image_url
   ) {
+
     images = [
       property.image_url
     ];
+
   }
 
 
-  title.textContent =
+  /* =========================
+     FILL PROPERTY INFORMATION
+  ========================= */
+
+  titleEl.textContent =
     propertyTitle;
 
-  location.textContent =
+  locationEl.textContent =
     propertyLocation;
 
-  status.textContent =
+  statusEl.textContent =
     propertyStatus;
 
-  price.textContent =
+  priceEl.textContent =
     money(propertyPrice);
 
-  description.textContent =
+  descriptionEl.textContent =
     propertyDescription;
 
 
-  stats.innerHTML = `
+  /* =========================
+     PROPERTY STATS
+  ========================= */
+
+  statsEl.innerHTML = `
     <span>🛏 ${bedrooms} beds</span>
     <span>🛁 ${bathrooms} baths</span>
     <span>📐 ${squareFeet} sqft</span>
@@ -147,10 +184,16 @@ function showProperty(property) {
   `;
 
 
-  gallery.innerHTML = "";
+  /* =========================
+     GALLERY
+  ========================= */
+
+  galleryEl.innerHTML = "";
 
 
   if (images.length > 0) {
+
+    /* MAIN IMAGE */
 
     const mainImage =
       document.createElement("img");
@@ -164,10 +207,34 @@ function showProperty(property) {
     mainImage.alt =
       propertyTitle;
 
-    gallery.appendChild(
+    mainImage.onerror = function () {
+
+      this.style.display = "none";
+
+      const fallback =
+        document.createElement("div");
+
+      fallback.className =
+        "property-no-image";
+
+      fallback.textContent =
+        "Photo unavailable";
+
+      galleryEl.insertBefore(
+        fallback,
+        galleryEl.firstChild
+      );
+
+    };
+
+    galleryEl.appendChild(
       mainImage
     );
 
+
+    /* =========================
+       THUMBNAILS
+    ========================= */
 
     if (images.length > 1) {
 
@@ -195,10 +262,21 @@ function showProperty(property) {
 
 
           if (index === 0) {
+
             thumbnail.classList.add(
               "active"
             );
+
           }
+
+
+          thumbnail.onerror =
+            function () {
+
+              this.style.display =
+                "none";
+
+            };
 
 
           thumbnail.addEventListener(
@@ -207,6 +285,7 @@ function showProperty(property) {
 
               mainImage.src =
                 image;
+
 
               document
                 .querySelectorAll(
@@ -218,6 +297,7 @@ function showProperty(property) {
                       "active"
                     )
                 );
+
 
               thumbnail.classList.add(
                 "active"
@@ -235,15 +315,16 @@ function showProperty(property) {
       );
 
 
-      gallery.appendChild(
+      galleryEl.appendChild(
         thumbnails
       );
 
     }
 
+
   } else {
 
-    gallery.innerHTML = `
+    galleryEl.innerHTML = `
       <div class="property-no-image">
         No photos available
       </div>
@@ -252,23 +333,44 @@ function showProperty(property) {
   }
 
 
+  /* =========================
+     PAGE TITLE
+  ========================= */
+
   document.title =
     `${propertyTitle} | Pixiun Realty LLC`;
 
 
-  loading.classList.add("hidden");
+  /* =========================
+     SHOW PAGE
+  ========================= */
 
-  errorBox.classList.add("hidden");
+  loadingEl.classList.add(
+    "hidden"
+  );
 
-  content.classList.remove("hidden");
+  errorBoxEl.classList.add(
+    "hidden"
+  );
+
+  contentEl.classList.remove(
+    "hidden"
+  );
+
 }
 
+
+/* =========================
+   LOAD PROPERTY
+========================= */
 
 async function loadProperty() {
 
   const id =
     getPropertyId();
 
+
+  /* No ID */
 
   if (!id) {
 
@@ -277,10 +379,21 @@ async function loadProperty() {
     );
 
     return;
+
   }
 
 
   try {
+
+    console.log(
+      "Loading property:",
+      id
+    );
+
+
+    /* =========================
+       LOAD API
+    ========================= */
 
     const response =
       await fetch(
@@ -298,18 +411,10 @@ async function loadProperty() {
 
     if (!response.ok) {
 
-      const errorText =
-        await response.text();
-
-      console.error(
-        "API error:",
-        response.status,
-        errorText
-      );
-
       throw new Error(
         `API returned ${response.status}`
       );
+
     }
 
 
@@ -318,10 +423,14 @@ async function loadProperty() {
 
 
     console.log(
-      "Properties loaded:",
+      "Properties received:",
       properties
     );
 
+
+    /* =========================
+       FIND PROPERTY
+    ========================= */
 
     const property =
       properties.find(
@@ -338,8 +447,19 @@ async function loadProperty() {
       );
 
       return;
+
     }
 
+
+    console.log(
+      "Property found:",
+      property
+    );
+
+
+    /* =========================
+       DISPLAY PROPERTY
+    ========================= */
 
     showProperty(
       property
@@ -353,6 +473,7 @@ async function loadProperty() {
       error
     );
 
+
     showError(
       "Unable to load this property. Please try again."
     );
@@ -362,23 +483,37 @@ async function loadProperty() {
 }
 
 
-if (inquiryForm) {
+/* =========================
+   PROPERTY INQUIRY FORM
+========================= */
 
-  inquiryForm.addEventListener(
+if (inquiryFormEl) {
+
+  inquiryFormEl.addEventListener(
     "submit",
     event => {
 
       event.preventDefault();
 
-      formMessage.textContent =
-        "Thanks — your inquiry has been received. We'll follow up with you about this property.";
 
-      inquiryForm.reset();
+      if (formMessageEl) {
+
+        formMessageEl.textContent =
+          "Thanks — your inquiry has been received. We'll follow up with you about this property.";
+
+      }
+
+
+      inquiryFormEl.reset();
 
     }
   );
 
 }
 
+
+/* =========================
+   START
+========================= */
 
 loadProperty();
