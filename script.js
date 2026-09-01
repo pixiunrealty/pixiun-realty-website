@@ -4,11 +4,6 @@ const count = document.getElementById("listingCount");
 
 let allProperties = [];
 
-
-/* =========================
-   ESCAPE HTML
-========================= */
-
 function esc(value) {
   return String(value ?? "").replace(
     /[&<>"']/g,
@@ -22,34 +17,20 @@ function esc(value) {
   );
 }
 
-
-/* =========================
-   FORMAT MONEY
-========================= */
-
 function money(value) {
   const number = Number(value);
 
-  if (!Number.isFinite(number)) {
-    return "";
-  }
-
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0
-  }).format(number);
+  return Number.isFinite(number)
+    ? new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0
+      }).format(number)
+    : "";
 }
 
-
-/* =========================
-   NORMALIZE PROPERTY
-========================= */
-
 function normalizeProperty(property) {
-
   return {
-
     id: property.id,
 
     title:
@@ -105,18 +86,10 @@ function normalizeProperty(property) {
     image_url:
       property.image_url ??
       ""
-
   };
-
 }
 
-
-/* =========================
-   RENDER PROPERTIES
-========================= */
-
 function render(list) {
-
   count.textContent =
     `${list.length} listing${list.length === 1 ? "" : "s"}`;
 
@@ -127,76 +100,40 @@ function render(list) {
     list.length !== 0
   );
 
-
   list.forEach(property => {
+    const p = normalizeProperty(property);
 
-    const p =
-      normalizeProperty(property);
+    const card = document.createElement("article");
 
-
-    const card =
-      document.createElement("article");
-
-
-    card.className =
-      "property";
-
-
-    /* =========================
-       PROPERTY IMAGE
-    ========================= */
+    card.className = "property";
 
     const image =
       p.image_urls.length > 0
         ? p.image_urls[0]
         : p.image_url;
 
-
     let imageHTML = "";
 
-
     if (image) {
-
       imageHTML = `
         <div class="property-img">
           <img
             src="${esc(image)}"
             alt="${esc(p.title)}"
             loading="lazy"
-            onerror="
-              this.style.display='none';
-              this.parentElement.classList.add('image-error');
-            "
+            onerror="this.style.display='none'; this.parentElement.classList.add('image-error');"
           >
-
-          <span class="image-fallback">
-            Photo unavailable
-          </span>
-
         </div>
       `;
-
     } else {
-
       imageHTML = `
         <div class="property-img image-error">
-
-          <span>
-            No photo available
-          </span>
-
+          <span>No photo available</span>
         </div>
       `;
-
     }
 
-
-    /* =========================
-       PROPERTY CARD
-    ========================= */
-
     card.innerHTML = `
-
       ${imageHTML}
 
       <div class="property-body">
@@ -204,7 +141,6 @@ function render(list) {
         <span class="status">
           ${esc(p.status)}
         </span>
-
 
         <div class="property-top">
 
@@ -218,11 +154,9 @@ function render(list) {
 
         </div>
 
-
         <div class="property-location">
           ${esc(p.location)}
         </div>
-
 
         <div class="stats">
 
@@ -240,92 +174,44 @@ function render(list) {
 
         </div>
 
-
-        <div class="property-view">
+        <a
+          class="property-view"
+          href="/property.html?id=${encodeURIComponent(p.id)}"
+        >
           View property →
-        </div>
+        </a>
 
       </div>
-
     `;
 
+    grid.appendChild(card);
+  });
+}
 
-    /* =========================
-       MAKE CARD CLICKABLE
-    ========================= */
-
-    card.addEventListener(
-      "click",
-      () => {
-
-        window.location.href =
-          `property.html?id=${encodeURIComponent(p.id)}`;
-
+async function loadProperties() {
+  try {
+    const response = await fetch(
+      "/api/properties",
+      {
+        headers: {
+          Accept: "application/json"
+        }
       }
     );
 
-
-    grid.appendChild(card);
-
-  });
-
-}
-
-
-/* =========================
-   LOAD PROPERTIES
-========================= */
-
-async function loadProperties() {
-
-  try {
-
-    const response =
-      await fetch(
-        "/api/properties",
-        {
-          method: "GET",
-
-          headers: {
-            Accept:
-              "application/json"
-          },
-
-          cache:
-            "no-store"
-        }
-      );
-
-
     if (!response.ok) {
-
       throw new Error(
-        `Unable to load properties. Status: ${response.status}`
+        "Unable to load properties."
       );
-
     }
-
 
     const properties =
       await response.json();
 
-
-    console.log(
-      "Properties loaded:",
-      properties
-    );
-
-
     allProperties =
-      properties.map(
-        normalizeProperty
-      );
+      properties.map(normalizeProperty);
 
-
-    render(
-      allProperties
-    );
-
+    render(allProperties);
 
   } catch (error) {
 
@@ -334,196 +220,90 @@ async function loadProperties() {
       error
     );
 
-
     allProperties = [];
 
-
     render([]);
-
   }
-
 }
 
-
-/* =========================
-   PROPERTY SEARCH
-========================= */
-
 function search() {
-
-  const locationInput =
+  const location =
     document
-      .getElementById(
-        "searchLocation"
-      )
+      .getElementById("searchLocation")
       .value
       .trim()
       .toLowerCase();
 
-
   const type =
     document
-      .getElementById(
-        "searchType"
-      )
+      .getElementById("searchType")
       .value;
-
 
   const maxPrice =
     Number(
       document
-        .getElementById(
-          "searchPrice"
-        )
+        .getElementById("searchPrice")
         .value || 0
     );
 
-
   const filtered =
-    allProperties.filter(
-      property => {
+    allProperties.filter(property => {
 
-        const p =
-          normalizeProperty(
-            property
-          );
+      const p =
+        normalizeProperty(property);
 
+      return (
 
-        const locationMatches =
-          !locationInput ||
+        (
+          !location ||
           String(p.location)
             .toLowerCase()
-            .includes(
-              locationInput
-            );
+            .includes(location)
+        )
 
+        &&
 
-        const typeMatches =
+        (
           !type ||
-          String(
-            p.property_type
-          )
-            .toLowerCase() ===
-          type.toLowerCase();
+          String(p.property_type)
+            .toLowerCase()
+            === type.toLowerCase()
+        )
 
+        &&
 
-        const priceMatches =
+        (
           !maxPrice ||
-          Number(
-            p.price || 0
-          ) <= maxPrice;
+          Number(p.price || 0)
+            <= maxPrice
+        )
 
+      );
+    });
 
-        return (
-          locationMatches &&
-          typeMatches &&
-          priceMatches
-        );
-
-      }
-    );
-
-
-  render(
-    filtered
-  );
-
+  render(filtered);
 }
 
-
-/* =========================
-   SEARCH BUTTON
-========================= */
-
-const searchButton =
-  document.getElementById(
-    "searchBtn"
-  );
-
-
-if (searchButton) {
-
-  searchButton.addEventListener(
+document
+  .getElementById("searchBtn")
+  .addEventListener(
     "click",
     search
   );
 
-}
+loadProperties();
 
-
-/* =========================
-   SEARCH WITH ENTER
-========================= */
-
-const searchLocation =
-  document.getElementById(
-    "searchLocation"
-  );
-
-
-if (searchLocation) {
-
-  searchLocation.addEventListener(
-    "keydown",
-    event => {
-
-      if (
-        event.key === "Enter"
-      ) {
-
-        search();
-
-      }
-
-    }
-  );
-
-}
-
-
-/* =========================
-   CONTACT FORM
-========================= */
-
-const contactForm =
-  document.getElementById(
-    "contactForm"
-  );
-
-
-if (contactForm) {
-
-  contactForm.addEventListener(
+document
+  .getElementById("contactForm")
+  .addEventListener(
     "submit",
     event => {
 
       event.preventDefault();
 
-
-      const formMessage =
-        document.getElementById(
-          "formMessage"
-        );
-
-
-      if (formMessage) {
-
-        formMessage.textContent =
-          "Thanks — your inquiry has been received. We'll follow up with you soon.";
-
-      }
-
-
-      contactForm.reset();
-
+      document.getElementById(
+        "formMessage"
+      ).textContent =
+        "Thanks — your inquiry is ready. Connect this form to your preferred email/CRM when you're ready to receive leads.";
     }
   );
-
-}
-
-
-/* =========================
-   START WEBSITE
-========================= */
-
-loadProperties();
