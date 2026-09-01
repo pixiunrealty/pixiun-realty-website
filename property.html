@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <title>Property | Pixiun Realty LLC</title>
+
+  <meta
+    name="description"
+    content="View property details with Pixiun Realty LLC."
+  >
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="site-header">
+
+  <a class="brand" href="index.html">
+    <span class="brand-mark">P</span>
+
+    <span>
+      <strong>PIXIUN</strong>
+      <small>REALTY LLC</small>
+    </span>
+  </a>
+
+  <nav>
+    <a href="index.html#home">Home</a>
+    <a href="index.html#properties">Buy</a>
+    <a href="index.html#sell">Sell</a>
+    <a href="index.html#rent">Rent</a>
+    <a href="index.html#about">About</a>
+    <a class="nav-cta" href="index.html#contact">
+      Contact
+    </a>
+  </nav>
+
+  <button class="menu-btn">☰</button>
+
+</header>
+
+
+<main>
+
+  <section class="property-detail">
+
+    <a
+      class="back-link"
+      href="index.html#properties"
+    >
+      ← Back to properties
+    </a>
+
+
+    <div id="propertyLoading" class="property-loading">
+      Loading property...
+    </div>
+
+
+    <div
+      id="propertyError"
+      class="property-error hidden"
+    >
+      Property could not be found.
+    </div>
+
+
+    <div
+      id="propertyContent"
+      class="hidden"
+    >
+
+      <div
+        id="propertyGallery"
+        class="property-gallery"
+      ></div>
+
+
+      <div class="property-detail-grid">
+
+        <div>
+
+          <span
+            id="propertyStatus"
+            class="status"
+          ></span>
+
+          <h1
+            id="propertyTitle"
+            class="property-detail-title"
+          ></h1>
+
+          <p
+            id="propertyLocation"
+            class="property-detail-location"
+          ></p>
+
+          <div
+            id="propertyStats"
+            class="property-detail-stats"
+          ></div>
+
+          <div class="property-description">
+
+            <p class="eyebrow">
+              PROPERTY DETAILS
+            </p>
+
+            <h2>
+              About this property
+            </h2>
+
+            <p id="propertyDescription"></p>
+
+          </div>
+
+        </div>
+
+
+        <aside class="property-contact-card">
+
+          <div
+            id="propertyPrice"
+            class="property-detail-price"
+          ></div>
+
+          <p>
+            Interested in this property?
+          </p>
+
+          <a
+            id="propertyInquiryButton"
+            class="primary"
+            href="#propertyInquiry"
+          >
+            Request Information
+          </a>
+
+        </aside>
+
+      </div>
+
+
+      <section
+        id="propertyInquiry"
+        class="property-inquiry"
+      >
+
+        <div>
+
+          <p class="eyebrow">
+            PROPERTY INQUIRY
+          </p>
+
+          <h2>
+            Interested in this property?
+          </h2>
+
+          <p>
+            Send us your information and
+            Pixiun Realty can follow up with
+            you about this listing.
+          </p>
+
+        </div>
+
+
+        <form id="propertyInquiryForm">
+
+          <input
+            name="name"
+            placeholder="Your name"
+            required
+          >
+
+          <input
+            name="email"
+            type="email"
+            placeholder="Email address"
+            required
+          >
+
+          <input
+            name="phone"
+            placeholder="Phone number"
+          >
+
+          <textarea
+            name="message"
+            placeholder="Tell us what you're interested in..."
+            required
+          ></textarea>
+
+          <button
+            class="primary"
+            type="submit"
+          >
+            Send Inquiry
+          </button>
+
+          <p
+            id="propertyFormMessage"
+            class="form-message"
+          ></p>
+
+        </form>
+
+      </section>
+
+    </div>
+
+  </section>
+
+</main>
+
+
+<footer>
+
+  <div class="brand footer-brand">
+
+    <span class="brand-mark">P</span>
+
+    <span>
+      <strong>PIXIUN</strong>
+      <small>REALTY LLC</small>
+    </span>
+
+  </div>
+
+  <p>
+    © 2026 Pixiun Realty LLC.
+    All rights reserved.
+  </p>
+
+</footer>
+
+
+<script src="property.js"></script>
+
+</body>
+</html>
