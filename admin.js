@@ -3,11 +3,22 @@ const adminSection = document.getElementById("adminSection");
 const loginForm = document.getElementById("loginForm");
 const loginMessage = document.getElementById("loginMessage");
 const logoutBtn = document.getElementById("logoutBtn");
+
 const propertyForm = document.getElementById("propertyForm");
 const formMessage = document.getElementById("formMessage");
 const adminListings = document.getElementById("adminListings");
 
+const submitButton = propertyForm.querySelector(
+  'button[type="submit"]'
+);
+
 let supabase = null;
+let editingPropertyId = null;
+
+
+/* =========================
+   INITIALIZE
+========================= */
 
 async function initialize() {
   try {
@@ -40,7 +51,9 @@ async function initialize() {
       error
     } = await supabase.auth.getSession();
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
     if (session) {
       showDashboard();
@@ -57,9 +70,9 @@ async function initialize() {
 }
 
 
-/* -------------------------
+/* =========================
    LOGIN / LOGOUT
-------------------------- */
+========================= */
 
 function showLogin() {
   loginSection.classList.remove("hidden");
@@ -78,7 +91,7 @@ loginForm.addEventListener("submit", async (event) => {
 
   if (!supabase) {
     loginMessage.textContent =
-      "Login system is still connecting. Please wait a moment.";
+      "Login system is still connecting. Please wait.";
     return;
   }
 
@@ -87,12 +100,6 @@ loginForm.addEventListener("submit", async (event) => {
 
   const password =
     document.getElementById("adminPassword").value;
-
-  if (!email || !password) {
-    loginMessage.textContent =
-      "Please enter your email and password.";
-    return;
-  }
 
   loginMessage.textContent = "Signing in...";
 
@@ -128,17 +135,23 @@ loginForm.addEventListener("submit", async (event) => {
 
 
 logoutBtn.addEventListener("click", async () => {
+
   if (!supabase) return;
 
   logoutBtn.disabled = true;
   logoutBtn.textContent = "Signing out...";
 
   try {
-    const { error } = await supabase.auth.signOut();
+
+    const { error } =
+      await supabase.auth.signOut();
 
     if (error) {
       throw error;
     }
+
+    editingPropertyId = null;
+    resetPropertyForm();
 
     showLogin();
 
@@ -146,25 +159,28 @@ logoutBtn.addEventListener("click", async () => {
       "You have been signed out.";
 
   } catch (error) {
+
     console.error("LOGOUT ERROR:", error);
 
     alert(
       error?.message ||
-      "Unable to sign out. Please try again."
+      "Unable to sign out."
     );
 
   } finally {
+
     logoutBtn.disabled = false;
     logoutBtn.textContent = "Sign out";
   }
 });
 
 
-/* -------------------------
-   ADD PROPERTY
-------------------------- */
+/* =========================
+   PROPERTY FORM
+========================= */
 
 propertyForm.addEventListener("submit", async (event) => {
+
   event.preventDefault();
 
   if (!supabase) {
@@ -172,9 +188,6 @@ propertyForm.addEventListener("submit", async (event) => {
       "Supabase is not connected.";
     return;
   }
-
-  formMessage.textContent =
-    "Publishing property...";
 
   const title =
     document.getElementById("propertyTitle").value.trim();
@@ -203,14 +216,13 @@ propertyForm.addEventListener("submit", async (event) => {
   const squareFeet =
     Number(document.getElementById("propertySquareFeet").value);
 
+  const photoInput =
+    document.getElementById("propertyPhotos");
+
   const photos =
-    Array.from(
-      document.getElementById("propertyPhotos").files
-    );
+    Array.from(photoInput.files || []);
 
   try {
-
-    /* Make sure user is still logged in */
 
     const {
       data: { session }
@@ -226,7 +238,132 @@ propertyForm.addEventListener("submit", async (event) => {
     }
 
 
-    /* Create property */
+    /* =====================
+       EDIT EXISTING PROPERTY
+    ===================== */
+
+    if (editingPropertyId) {
+
+      submitButton.disabled = true;
+      submitButton.textContent = "Saving changes...";
+
+      formMessage.textContent =
+        "Updating property...";
+
+
+      const {
+        error: updateError
+      } = await supabase
+        .from("Properties")
+        .update({
+          Title: title,
+          Description: description,
+          Price: price,
+          Location: locationValue,
+          Property_type: propertyType,
+          Status: propertyStatus,
+          Bedrooms: bedrooms,
+          Bathrooms: bathrooms,
+          Square_feet: squareFeet
+        })
+        .eq("id", editingPropertyId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+
+      /* Add any NEW photos */
+
+      let uploadedCount = 0;
+
+      for (const photo of photos) {
+
+        const safeName =
+          photo.name.replace(
+            /[^a-zA-Z0-9._-]/g,
+            "-"
+          );
+
+        const filePath =
+          `${editingPropertyId}/${Date.now()}-${safeName}`;
+
+        const {
+          error: uploadError
+        } = await supabase.storage
+          .from("property-images")
+          .upload(filePath, photo, {
+            cacheControl: "3600",
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error(
+            "PHOTO UPLOAD ERROR:",
+            uploadError
+          );
+          continue;
+        }
+
+        const {
+          data: publicUrlData
+        } = supabase.storage
+          .from("property-images")
+          .getPublicUrl(filePath);
+
+        const imageUrl =
+          publicUrlData?.publicUrl;
+
+        if (!imageUrl) {
+          continue;
+        }
+
+        const {
+          error: imageError
+        } = await supabase
+          .from("Property _image")
+          .insert({
+            Property_id: editingPropertyId,
+            Image_url: imageUrl
+          });
+
+        if (imageError) {
+          console.error(
+            "IMAGE DATABASE ERROR:",
+            imageError
+          );
+          continue;
+        }
+
+        uploadedCount++;
+      }
+
+
+      const message =
+        uploadedCount > 0
+          ? `Property updated successfully. ${uploadedCount} new photo${uploadedCount === 1 ? "" : "s"} added.`
+          : "Property updated successfully.";
+
+      formMessage.textContent = message;
+
+      resetPropertyForm();
+
+      await loadListings();
+
+      return;
+    }
+
+
+    /* =====================
+       CREATE NEW PROPERTY
+    ===================== */
+
+    submitButton.disabled = true;
+    submitButton.textContent = "Publishing...";
+
+    formMessage.textContent =
+      "Publishing property...";
+
 
     const {
       data: property,
@@ -261,8 +398,10 @@ propertyForm.addEventListener("submit", async (event) => {
     for (const photo of photos) {
 
       const safeName =
-        photo.name
-          .replace(/[^a-zA-Z0-9._-]/g, "-");
+        photo.name.replace(
+          /[^a-zA-Z0-9._-]/g,
+          "-"
+        );
 
       const filePath =
         `${propertyId}/${Date.now()}-${safeName}`;
@@ -284,9 +423,6 @@ propertyForm.addEventListener("submit", async (event) => {
         continue;
       }
 
-
-      /* Get public URL */
-
       const {
         data: publicUrlData
       } = supabase.storage
@@ -299,9 +435,6 @@ propertyForm.addEventListener("submit", async (event) => {
       if (!imageUrl) {
         continue;
       }
-
-
-      /* Save image URL */
 
       const {
         error: imageError
@@ -336,20 +469,32 @@ propertyForm.addEventListener("submit", async (event) => {
   } catch (error) {
 
     console.error(
-      "PROPERTY PUBLISH ERROR:",
+      "PROPERTY FORM ERROR:",
       error
     );
 
     formMessage.textContent =
       error?.message ||
-      "Unable to publish property.";
+      "Unable to save property.";
+
+  } finally {
+
+    submitButton.disabled = false;
+
+    if (editingPropertyId) {
+      submitButton.textContent =
+        "Save changes";
+    } else {
+      submitButton.textContent =
+        "Publish property";
+    }
   }
 });
 
 
-/* -------------------------
-   LOAD ADMIN LISTINGS
-------------------------- */
+/* =========================
+   LOAD LISTINGS
+========================= */
 
 async function loadListings() {
 
@@ -386,6 +531,7 @@ async function loadListings() {
       return;
     }
 
+
     adminListings.innerHTML = `
       <div class="admin-list-header">
         <p class="eyebrow">LISTINGS</p>
@@ -393,14 +539,25 @@ async function loadListings() {
       </div>
 
       <div class="admin-list">
+
         ${properties.map(property => `
+
           <article class="admin-listing">
 
-            <div>
-              <h3>${escapeHtml(property.Title || "Untitled property")}</h3>
+            <div class="admin-listing-info">
+
+              <h3>
+                ${escapeHtml(
+                  property.Title ||
+                  "Untitled property"
+                )}
+              </h3>
 
               <p>
-                ${escapeHtml(property.Location || "Location unavailable")}
+                ${escapeHtml(
+                  property.Location ||
+                  "Location unavailable"
+                )}
               </p>
 
               <strong>
@@ -412,28 +569,69 @@ async function loadListings() {
                 ${property.Bathrooms ?? 0} bath ·
                 ${property.Square_feet ?? 0} sq ft
               </small>
+
             </div>
 
-            <button
-              class="secondary delete-property"
-              data-id="${property.id}"
-              type="button"
-            >
-              Delete
-            </button>
+            <div class="admin-listing-actions">
+
+              <button
+                class="secondary edit-property"
+                data-id="${property.id}"
+                type="button"
+              >
+                Edit
+              </button>
+
+              <button
+                class="secondary delete-property"
+                data-id="${property.id}"
+                type="button"
+              >
+                Delete
+              </button>
+
+            </div>
 
           </article>
+
         `).join("")}
+
       </div>
     `;
+
+
+    /* Edit buttons */
+
+    document
+      .querySelectorAll(".edit-property")
+      .forEach(button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+            editProperty(
+              button.dataset.id
+            );
+          }
+        );
+
+      });
+
+
+    /* Delete buttons */
 
     document
       .querySelectorAll(".delete-property")
       .forEach(button => {
 
-        button.addEventListener("click", () => {
-          deleteProperty(button.dataset.id);
-        });
+        button.addEventListener(
+          "click",
+          () => {
+            deleteProperty(
+              button.dataset.id
+            );
+          }
+        );
 
       });
 
@@ -453,21 +651,201 @@ async function loadListings() {
 }
 
 
-/* -------------------------
+/* =========================
+   EDIT PROPERTY
+========================= */
+
+async function editProperty(propertyId) {
+
+  try {
+
+    formMessage.textContent =
+      "Loading property...";
+
+    const {
+      data: property,
+      error
+    } = await supabase
+      .from("Properties")
+      .select("*")
+      .eq("id", propertyId)
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!property) {
+      throw new Error(
+        "Property could not be found."
+      );
+    }
+
+
+    editingPropertyId = propertyId;
+
+
+    document.getElementById(
+      "propertyTitle"
+    ).value =
+      property.Title || "";
+
+    document.getElementById(
+      "propertyDescription"
+    ).value =
+      property.Description || "";
+
+    document.getElementById(
+      "propertyPrice"
+    ).value =
+      property.Price ?? "";
+
+    document.getElementById(
+      "propertyLocation"
+    ).value =
+      property.Location || "";
+
+    document.getElementById(
+      "propertyType"
+    ).value =
+      property.Property_type || "";
+
+    document.getElementById(
+      "propertyStatus"
+    ).value =
+      property.Status || "For Sale";
+
+    document.getElementById(
+      "propertyBedrooms"
+    ).value =
+      property.Bedrooms ?? "";
+
+    document.getElementById(
+      "propertyBathrooms"
+    ).value =
+      property.Bathrooms ?? "";
+
+    document.getElementById(
+      "propertySquareFeet"
+    ).value =
+      property.Square_feet ?? "";
+
+
+    submitButton.textContent =
+      "Save changes";
+
+
+    formMessage.textContent =
+      "Editing property. Update the details below, then save your changes.";
+
+
+    addCancelButton();
+
+
+    /* Scroll back to form */
+
+    propertyForm.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+
+  } catch (error) {
+
+    console.error(
+      "EDIT PROPERTY ERROR:",
+      error
+    );
+
+    formMessage.textContent =
+      error?.message ||
+      "Unable to load property.";
+  }
+}
+
+
+/* =========================
+   CANCEL EDIT
+========================= */
+
+function addCancelButton() {
+
+  let cancelButton =
+    document.getElementById(
+      "cancelEditBtn"
+    );
+
+  if (cancelButton) return;
+
+  cancelButton =
+    document.createElement("button");
+
+  cancelButton.id =
+    "cancelEditBtn";
+
+  cancelButton.type =
+    "button";
+
+  cancelButton.className =
+    "secondary";
+
+  cancelButton.textContent =
+    "Cancel edit";
+
+  cancelButton.addEventListener(
+    "click",
+    () => {
+      resetPropertyForm();
+    }
+  );
+
+
+  submitButton.insertAdjacentElement(
+    "afterend",
+    cancelButton
+  );
+}
+
+
+function resetPropertyForm() {
+
+  editingPropertyId = null;
+
+  propertyForm.reset();
+
+  submitButton.disabled = false;
+
+  submitButton.textContent =
+    "Publish property";
+
+  formMessage.textContent = "";
+
+  const cancelButton =
+    document.getElementById(
+      "cancelEditBtn"
+    );
+
+  if (cancelButton) {
+    cancelButton.remove();
+  }
+}
+
+
+/* =========================
    DELETE PROPERTY
-------------------------- */
+========================= */
 
 async function deleteProperty(propertyId) {
 
-  if (!confirm(
-    "Are you sure you want to delete this property?"
-  )) {
+  const confirmed =
+    confirm(
+      "Are you sure you want to delete this property? This cannot be undone."
+    );
+
+  if (!confirmed) {
     return;
   }
 
   try {
-
-    /* Find associated images */
 
     const {
       data: images,
@@ -485,7 +863,7 @@ async function deleteProperty(propertyId) {
     }
 
 
-    /* Delete database image records */
+    /* Delete image records */
 
     const {
       error: imageDeleteError
@@ -513,33 +891,38 @@ async function deleteProperty(propertyId) {
     }
 
 
-    /* Remove storage files */
+    /* Delete storage images */
 
     if (images && images.length) {
 
-      const paths = images
-        .map(image => {
+      const paths =
+        images
+          .map(image => {
 
-          const url = image.Image_url;
+            const url =
+              image.Image_url;
 
-          if (!url) return null;
+            if (!url) return null;
 
-          const marker =
-            "/property-images/";
+            const marker =
+              "/property-images/";
 
-          const index =
-            url.indexOf(marker);
+            const index =
+              url.indexOf(marker);
 
-          if (index === -1) return null;
+            if (index === -1) {
+              return null;
+            }
 
-          return decodeURIComponent(
-            url.substring(
-              index + marker.length
-            )
-          );
+            return decodeURIComponent(
+              url.substring(
+                index + marker.length
+              )
+            );
 
-        })
-        .filter(Boolean);
+          })
+          .filter(Boolean);
+
 
       if (paths.length) {
 
@@ -556,6 +939,14 @@ async function deleteProperty(propertyId) {
           );
         }
       }
+    }
+
+
+    if (
+      String(editingPropertyId) ===
+      String(propertyId)
+    ) {
+      resetPropertyForm();
     }
 
 
@@ -576,23 +967,27 @@ async function deleteProperty(propertyId) {
 }
 
 
-/* -------------------------
+/* =========================
    HELPERS
-------------------------- */
+========================= */
 
 function formatPrice(price) {
 
-  const number = Number(price);
+  const number =
+    Number(price);
 
   if (!Number.isFinite(number)) {
     return "Price unavailable";
   }
 
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0
-  }).format(number);
+  return new Intl.NumberFormat(
+    "en-US",
+    {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0
+    }
+  ).format(number);
 }
 
 
@@ -607,22 +1002,29 @@ function escapeHtml(value) {
 }
 
 
-/* -------------------------
-   SESSION CHANGES
-------------------------- */
+/* =========================
+   AUTH STATE
+========================= */
 
-async function watchAuth() {
+function watchAuth() {
 
   if (!supabase) return;
 
   supabase.auth.onAuthStateChange(
     (event, session) => {
 
-      if (event === "SIGNED_OUT" || !session) {
+      if (
+        event === "SIGNED_OUT" ||
+        !session
+      ) {
+        editingPropertyId = null;
         showLogin();
       }
 
-      if (event === "SIGNED_IN" && session) {
+      if (
+        event === "SIGNED_IN" &&
+        session
+      ) {
         showDashboard();
       }
 
@@ -631,9 +1033,9 @@ async function watchAuth() {
 }
 
 
-/* -------------------------
+/* =========================
    START
-------------------------- */
+========================= */
 
 initialize().then(() => {
   watchAuth();
