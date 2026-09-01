@@ -33,7 +33,10 @@ function normalizeProperty(property) {
   return {
     id: property.id,
 
-    title: property.Title ?? property.title ?? "Property",
+    title:
+      property.Title ??
+      property.title ??
+      "Property",
 
     description:
       property.Description ??
@@ -174,20 +177,62 @@ function render(list) {
       </div>
     `;
 
+    /*
+      Make the entire property card open
+      the property's details page.
+    */
+    card.style.cursor = "pointer";
+
+    card.addEventListener("click", () => {
+      window.location.href =
+        `property.html?id=${encodeURIComponent(p.id)}`;
+    });
+
+    /*
+      Allow keyboard users to open the card.
+    */
+    card.setAttribute("tabindex", "0");
+
+    card.setAttribute(
+      "role",
+      "link"
+    );
+
+    card.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          event.key === "Enter" ||
+          event.key === " "
+        ) {
+
+          event.preventDefault();
+
+          window.location.href =
+            `property.html?id=${encodeURIComponent(p.id)}`;
+        }
+
+      }
+    );
+
     grid.appendChild(card);
   });
 }
 
 async function loadProperties() {
   try {
-    const response = await fetch(
-      "/api/properties",
-      {
-        headers: {
-          Accept: "application/json"
+
+    const response =
+      await fetch(
+        "/api/properties",
+        {
+          headers: {
+            Accept:
+              "application/json"
+          }
         }
-      }
-    );
+      );
 
     if (!response.ok) {
       throw new Error(
@@ -199,9 +244,13 @@ async function loadProperties() {
       await response.json();
 
     allProperties =
-      properties.map(normalizeProperty);
+      properties.map(
+        normalizeProperty
+      );
 
-    render(allProperties);
+    render(
+      allProperties
+    );
 
   } catch (error) {
 
@@ -217,61 +266,89 @@ async function loadProperties() {
 }
 
 function search() {
+
   const location =
     document
-      .getElementById("searchLocation")
+      .getElementById(
+        "searchLocation"
+      )
       .value
       .trim()
       .toLowerCase();
 
   const type =
-    document.getElementById("searchType").value;
+    document
+      .getElementById(
+        "searchType"
+      )
+      .value;
 
   const maxPrice =
     Number(
-      document.getElementById("searchPrice").value || 0
+      document
+        .getElementById(
+          "searchPrice"
+        )
+        .value || 0
     );
 
   const filtered =
-    allProperties.filter(property => {
+    allProperties.filter(
+      property => {
 
-      const p =
-        normalizeProperty(property);
+        const p =
+          normalizeProperty(
+            property
+          );
 
-      return (
+        return (
 
-        (
-          !location ||
-          String(p.location)
-            .toLowerCase()
-            .includes(location)
-        )
+          (
+            !location ||
+            String(
+              p.location
+            )
+              .toLowerCase()
+              .includes(
+                location
+              )
+          )
 
-        &&
+          &&
 
-        (
-          !type ||
-          String(p.property_type)
-            .toLowerCase()
-            === type.toLowerCase()
-        )
+          (
+            !type ||
+            String(
+              p.property_type
+            )
+              .toLowerCase()
+            ===
+            type.toLowerCase()
+          )
 
-        &&
+          &&
 
-        (
-          !maxPrice ||
-          Number(p.price || 0)
-            <= maxPrice
-        )
+          (
+            !maxPrice ||
+            Number(
+              p.price || 0
+            )
+            <=
+            maxPrice
+          )
 
-      );
-    });
+        );
+
+      }
+    );
 
   render(filtered);
 }
 
 document
-  .getElementById("searchBtn")
+  .getElementById(
+    "searchBtn"
+  )
   .addEventListener(
     "click",
     search
@@ -280,7 +357,9 @@ document
 loadProperties();
 
 document
-  .getElementById("contactForm")
+  .getElementById(
+    "contactForm"
+  )
   .addEventListener(
     "submit",
     event => {
@@ -291,5 +370,6 @@ document
         "formMessage"
       ).textContent =
         "Thanks — your inquiry is ready. Connect this form to your preferred email/CRM when you're ready to receive leads.";
+
     }
   );
