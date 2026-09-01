@@ -4,6 +4,11 @@ const count = document.getElementById("listingCount");
 
 let allProperties = [];
 
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
 function esc(value) {
   return String(value ?? "").replace(
     /[&<>"']/g,
@@ -17,20 +22,34 @@ function esc(value) {
   );
 }
 
+
+/* =========================
+   FORMAT MONEY
+========================= */
+
 function money(value) {
   const number = Number(value);
 
-  return Number.isFinite(number)
-    ? new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 0
-      }).format(number)
-    : "";
+  if (!Number.isFinite(number)) {
+    return "";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0
+  }).format(number);
 }
 
+
+/* =========================
+   NORMALIZE PROPERTY
+========================= */
+
 function normalizeProperty(property) {
+
   return {
+
     id: property.id,
 
     title:
@@ -86,10 +105,18 @@ function normalizeProperty(property) {
     image_url:
       property.image_url ??
       ""
+
   };
+
 }
 
+
+/* =========================
+   RENDER PROPERTIES
+========================= */
+
 function render(list) {
+
   count.textContent =
     `${list.length} listing${list.length === 1 ? "" : "s"}`;
 
@@ -100,40 +127,76 @@ function render(list) {
     list.length !== 0
   );
 
+
   list.forEach(property => {
-    const p = normalizeProperty(property);
 
-    const card = document.createElement("article");
+    const p =
+      normalizeProperty(property);
 
-    card.className = "property";
+
+    const card =
+      document.createElement("article");
+
+
+    card.className =
+      "property";
+
+
+    /* =========================
+       PROPERTY IMAGE
+    ========================= */
 
     const image =
       p.image_urls.length > 0
         ? p.image_urls[0]
         : p.image_url;
 
+
     let imageHTML = "";
 
+
     if (image) {
+
       imageHTML = `
         <div class="property-img">
           <img
             src="${esc(image)}"
             alt="${esc(p.title)}"
             loading="lazy"
-            onerror="this.style.display='none'; this.parentElement.classList.add('image-error');"
+            onerror="
+              this.style.display='none';
+              this.parentElement.classList.add('image-error');
+            "
           >
+
+          <span class="image-fallback">
+            Photo unavailable
+          </span>
+
         </div>
       `;
+
     } else {
+
       imageHTML = `
         <div class="property-img image-error">
-          <span>No photo available</span>
+
+          <span>
+            No photo available
+          </span>
+
         </div>
       `;
+
     }
 
+
+    /* =========================
+       PROPERTY CARD
+    ========================= */
+
     card.innerHTML = `
+
       ${imageHTML}
 
       <div class="property-body">
@@ -141,6 +204,7 @@ function render(list) {
         <span class="status">
           ${esc(p.status)}
         </span>
+
 
         <div class="property-top">
 
@@ -154,9 +218,11 @@ function render(list) {
 
         </div>
 
+
         <div class="property-location">
           ${esc(p.location)}
         </div>
+
 
         <div class="stats">
 
@@ -174,83 +240,92 @@ function render(list) {
 
         </div>
 
+
+        <div class="property-view">
+          View property →
+        </div>
+
       </div>
+
     `;
 
-    /*
-      Make the entire property card open
-      the property's details page.
-    */
-    card.style.cursor = "pointer";
 
-    card.addEventListener("click", () => {
-      window.location.href =
-        `property.html?id=${encodeURIComponent(p.id)}`;
-    });
-
-    /*
-      Allow keyboard users to open the card.
-    */
-    card.setAttribute("tabindex", "0");
-
-    card.setAttribute(
-      "role",
-      "link"
-    );
+    /* =========================
+       MAKE CARD CLICKABLE
+    ========================= */
 
     card.addEventListener(
-      "keydown",
-      event => {
+      "click",
+      () => {
 
-        if (
-          event.key === "Enter" ||
-          event.key === " "
-        ) {
-
-          event.preventDefault();
-
-          window.location.href =
-            `property.html?id=${encodeURIComponent(p.id)}`;
-        }
+        window.location.href =
+          `property.html?id=${encodeURIComponent(p.id)}`;
 
       }
     );
 
+
     grid.appendChild(card);
+
   });
+
 }
 
+
+/* =========================
+   LOAD PROPERTIES
+========================= */
+
 async function loadProperties() {
+
   try {
 
     const response =
       await fetch(
         "/api/properties",
         {
+          method: "GET",
+
           headers: {
             Accept:
               "application/json"
-          }
+          },
+
+          cache:
+            "no-store"
         }
       );
 
+
     if (!response.ok) {
+
       throw new Error(
-        "Unable to load properties."
+        `Unable to load properties. Status: ${response.status}`
       );
+
     }
+
 
     const properties =
       await response.json();
+
+
+    console.log(
+      "Properties loaded:",
+      properties
+    );
+
 
     allProperties =
       properties.map(
         normalizeProperty
       );
 
+
     render(
       allProperties
     );
+
 
   } catch (error) {
 
@@ -259,15 +334,24 @@ async function loadProperties() {
       error
     );
 
+
     allProperties = [];
 
+
     render([]);
+
   }
+
 }
+
+
+/* =========================
+   PROPERTY SEARCH
+========================= */
 
 function search() {
 
-  const location =
+  const locationInput =
     document
       .getElementById(
         "searchLocation"
@@ -276,12 +360,14 @@ function search() {
       .trim()
       .toLowerCase();
 
+
   const type =
     document
       .getElementById(
         "searchType"
       )
       .value;
+
 
   const maxPrice =
     Number(
@@ -292,6 +378,7 @@ function search() {
         .value || 0
     );
 
+
   const filtered =
     allProperties.filter(
       property => {
@@ -301,75 +388,142 @@ function search() {
             property
           );
 
+
+        const locationMatches =
+          !locationInput ||
+          String(p.location)
+            .toLowerCase()
+            .includes(
+              locationInput
+            );
+
+
+        const typeMatches =
+          !type ||
+          String(
+            p.property_type
+          )
+            .toLowerCase() ===
+          type.toLowerCase();
+
+
+        const priceMatches =
+          !maxPrice ||
+          Number(
+            p.price || 0
+          ) <= maxPrice;
+
+
         return (
-
-          (
-            !location ||
-            String(
-              p.location
-            )
-              .toLowerCase()
-              .includes(
-                location
-              )
-          )
-
-          &&
-
-          (
-            !type ||
-            String(
-              p.property_type
-            )
-              .toLowerCase()
-            ===
-            type.toLowerCase()
-          )
-
-          &&
-
-          (
-            !maxPrice ||
-            Number(
-              p.price || 0
-            )
-            <=
-            maxPrice
-          )
-
+          locationMatches &&
+          typeMatches &&
+          priceMatches
         );
 
       }
     );
 
-  render(filtered);
+
+  render(
+    filtered
+  );
+
 }
 
-document
-  .getElementById(
+
+/* =========================
+   SEARCH BUTTON
+========================= */
+
+const searchButton =
+  document.getElementById(
     "searchBtn"
-  )
-  .addEventListener(
+  );
+
+
+if (searchButton) {
+
+  searchButton.addEventListener(
     "click",
     search
   );
 
-loadProperties();
+}
 
-document
-  .getElementById(
+
+/* =========================
+   SEARCH WITH ENTER
+========================= */
+
+const searchLocation =
+  document.getElementById(
+    "searchLocation"
+  );
+
+
+if (searchLocation) {
+
+  searchLocation.addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key === "Enter"
+      ) {
+
+        search();
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================
+   CONTACT FORM
+========================= */
+
+const contactForm =
+  document.getElementById(
     "contactForm"
-  )
-  .addEventListener(
+  );
+
+
+if (contactForm) {
+
+  contactForm.addEventListener(
     "submit",
     event => {
 
       event.preventDefault();
 
-      document.getElementById(
-        "formMessage"
-      ).textContent =
-        "Thanks — your inquiry is ready. Connect this form to your preferred email/CRM when you're ready to receive leads.";
+
+      const formMessage =
+        document.getElementById(
+          "formMessage"
+        );
+
+
+      if (formMessage) {
+
+        formMessage.textContent =
+          "Thanks — your inquiry has been received. We'll follow up with you soon.";
+
+      }
+
+
+      contactForm.reset();
 
     }
   );
+
+}
+
+
+/* =========================
+   START WEBSITE
+========================= */
+
+loadProperties();
