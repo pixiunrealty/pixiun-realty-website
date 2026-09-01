@@ -772,4 +772,9 @@ function updateFormButton() {
 // RUN
 // ========================================
 
-start();
+start().catch(error => {
+  console.error(error);
+
+  document.getElementById("loginMessage").textContent =
+    "ERROR: " + (error.message || String(error));
+});
