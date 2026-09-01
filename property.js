@@ -16,13 +16,15 @@ const formMessage = document.getElementById("propertyFormMessage");
 function money(value) {
   const number = Number(value);
 
-  return Number.isFinite(number)
-    ? new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 0
-      }).format(number)
-    : "";
+  if (!Number.isFinite(number)) {
+    return "";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0
+  }).format(number);
 }
 
 function getPropertyId() {
@@ -33,15 +35,23 @@ function getPropertyId() {
   return params.get("id");
 }
 
-function showError(message = "Property could not be found.") {
-  loading.classList.add("hidden");
-  content.classList.add("hidden");
+function showError(message) {
+  if (loading) {
+    loading.classList.add("hidden");
+  }
 
-  errorBox.textContent = message;
-  errorBox.classList.remove("hidden");
+  if (content) {
+    content.classList.add("hidden");
+  }
+
+  if (errorBox) {
+    errorBox.textContent = message;
+    errorBox.classList.remove("hidden");
+  }
 }
 
 function showProperty(property) {
+
   const propertyTitle =
     property.Title ??
     property.title ??
@@ -87,20 +97,30 @@ function showProperty(property) {
     property.square_feet ??
     0;
 
+
   let images = [];
 
-  if (Array.isArray(property.image_urls)) {
-    images = property.image_urls.filter(Boolean);
+  if (
+    Array.isArray(property.image_urls)
+  ) {
+    images =
+      property.image_urls.filter(
+        image => image
+      );
   }
 
   if (
     images.length === 0 &&
     property.image_url
   ) {
-    images = [property.image_url];
+    images = [
+      property.image_url
+    ];
   }
 
-  title.textContent = propertyTitle;
+
+  title.textContent =
+    propertyTitle;
 
   location.textContent =
     propertyLocation;
@@ -138,7 +158,8 @@ function showProperty(property) {
     mainImage.className =
       "property-main-image";
 
-    mainImage.src = images[0];
+    mainImage.src =
+      images[0];
 
     mainImage.alt =
       propertyTitle;
@@ -163,7 +184,8 @@ function showProperty(property) {
           const thumbnail =
             document.createElement("img");
 
-          thumbnail.src = image;
+          thumbnail.src =
+            image;
 
           thumbnail.alt =
             `${propertyTitle} photo ${index + 1}`;
@@ -247,7 +269,9 @@ async function loadProperty() {
   const id =
     getPropertyId();
 
+
   if (!id) {
+
     showError(
       "No property was selected."
     );
@@ -262,23 +286,41 @@ async function loadProperty() {
       await fetch(
         "/api/properties",
         {
+          method: "GET",
           headers: {
             Accept:
               "application/json"
-          }
+          },
+          cache: "no-store"
         }
       );
 
 
     if (!response.ok) {
+
+      const errorText =
+        await response.text();
+
+      console.error(
+        "API error:",
+        response.status,
+        errorText
+      );
+
       throw new Error(
-        "Unable to load properties."
+        `API returned ${response.status}`
       );
     }
 
 
     const properties =
       await response.json();
+
+
+    console.log(
+      "Properties loaded:",
+      properties
+    );
 
 
     const property =
@@ -292,14 +334,17 @@ async function loadProperty() {
     if (!property) {
 
       showError(
-        "That property could not be found."
+        `Property #${id} could not be found.`
       );
 
       return;
     }
 
 
-    showProperty(property);
+    showProperty(
+      property
+    );
+
 
   } catch (error) {
 
@@ -309,7 +354,7 @@ async function loadProperty() {
     );
 
     showError(
-      "Unable to load this property right now."
+      "Unable to load this property. Please try again."
     );
 
   }
@@ -317,19 +362,23 @@ async function loadProperty() {
 }
 
 
-inquiryForm.addEventListener(
-  "submit",
-  event => {
+if (inquiryForm) {
 
-    event.preventDefault();
+  inquiryForm.addEventListener(
+    "submit",
+    event => {
 
-    formMessage.textContent =
-      "Thanks — your inquiry has been received. We'll follow up with you about this property.";
+      event.preventDefault();
 
-    inquiryForm.reset();
+      formMessage.textContent =
+        "Thanks — your inquiry has been received. We'll follow up with you about this property.";
 
-  }
-);
+      inquiryForm.reset();
+
+    }
+  );
+
+}
 
 
 loadProperty();
