@@ -3,12 +3,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 let supabase = null;
 let editingPropertyId = null;
 
-// --------------------------------------------------
+// ==================================================
 // ELEMENTS
-// --------------------------------------------------
+// ==================================================
 
-const loginPanel = document.getElementById("loginPanel");
-const adminPanel = document.getElementById("adminPanel");
+const loginSection = document.getElementById("loginSection");
+const adminSection = document.getElementById("adminSection");
 
 const loginForm = document.getElementById("loginForm");
 const adminEmail = document.getElementById("adminEmail");
@@ -18,6 +18,7 @@ const loginMessage = document.getElementById("loginMessage");
 const logoutBtn = document.getElementById("logoutBtn");
 
 const propertyForm = document.getElementById("propertyForm");
+
 const propertyTitle = document.getElementById("propertyTitle");
 const propertyDescription = document.getElementById("propertyDescription");
 const propertyPrice = document.getElementById("propertyPrice");
@@ -30,15 +31,21 @@ const propertySquareFeet = document.getElementById("propertySquareFeet");
 
 const propertyPhotos = document.getElementById("propertyPhotos");
 
+const formHeading = document.getElementById("formHeading");
 const formMessage = document.getElementById("formMessage");
-const submitPropertyBtn = document.getElementById("submitPropertyBtn");
-const cancelEditBtn = document.getElementById("cancelEditBtn");
 
-const propertyList = document.getElementById("propertyList");
+const submitPropertyBtn =
+  document.getElementById("submitPropertyBtn");
 
-// --------------------------------------------------
-// INITIALIZE SUPABASE
-// --------------------------------------------------
+const cancelEditBtn =
+  document.getElementById("cancelEditBtn");
+
+const adminListings =
+  document.getElementById("adminListings");
+
+// ==================================================
+// SUPABASE
+// ==================================================
 
 async function initializeSupabase() {
   try {
@@ -54,11 +61,19 @@ async function initializeSupabase() {
       throw new Error("Supabase configuration is missing.");
     }
 
-    supabase = createClient(config.url, config.key);
+    supabase = createClient(
+      config.url,
+      config.key
+    );
 
     return true;
+
   } catch (error) {
-    console.error("Supabase initialization error:", error);
+
+    console.error(
+      "Supabase initialization error:",
+      error
+    );
 
     if (loginMessage) {
       loginMessage.textContent =
@@ -69,11 +84,43 @@ async function initializeSupabase() {
   }
 }
 
-// --------------------------------------------------
-// CHECK CURRENT SESSION
-// --------------------------------------------------
+// ==================================================
+// LOGIN / ADMIN VISIBILITY
+// ==================================================
+
+function showLogin() {
+
+  if (loginSection) {
+    loginSection.classList.remove("hidden");
+    loginSection.hidden = false;
+  }
+
+  if (adminSection) {
+    adminSection.classList.add("hidden");
+    adminSection.hidden = true;
+  }
+}
+
+
+function showAdmin() {
+
+  if (loginSection) {
+    loginSection.classList.add("hidden");
+    loginSection.hidden = true;
+  }
+
+  if (adminSection) {
+    adminSection.classList.remove("hidden");
+    adminSection.hidden = false;
+  }
+}
+
+// ==================================================
+// SESSION
+// ==================================================
 
 async function checkSession() {
+
   if (!supabase) return;
 
   const {
@@ -82,117 +129,165 @@ async function checkSession() {
   } = await supabase.auth.getSession();
 
   if (error) {
-    console.error("Session error:", error);
+
+    console.error(
+      "Session error:",
+      error
+    );
+
     showLogin();
+
     return;
   }
 
   if (session) {
+
     showAdmin();
+
     await loadProperties();
+
   } else {
+
     showLogin();
   }
 }
 
-// --------------------------------------------------
-// SHOW / HIDE PANELS
-// --------------------------------------------------
-
-function showLogin() {
-  if (loginPanel) loginPanel.hidden = false;
-  if (adminPanel) adminPanel.hidden = true;
-}
-
-function showAdmin() {
-  if (loginPanel) loginPanel.hidden = true;
-  if (adminPanel) adminPanel.hidden = false;
-}
-
-// --------------------------------------------------
+// ==================================================
 // LOGIN
-// --------------------------------------------------
+// ==================================================
 
-loginForm?.addEventListener("submit", async (event) => {
-  event.preventDefault();
+loginForm?.addEventListener(
+  "submit",
+  async (event) => {
 
-  if (!supabase) return;
+    event.preventDefault();
 
-  const email = adminEmail.value.trim();
-  const password = adminPassword.value;
+    if (!supabase) return;
 
-  if (!email || !password) {
-    loginMessage.textContent = "Please enter your email and password.";
-    return;
+    const email =
+      adminEmail.value.trim();
+
+    const password =
+      adminPassword.value;
+
+    if (!email || !password) {
+
+      loginMessage.textContent =
+        "Please enter your email and password.";
+
+      return;
+    }
+
+    loginMessage.textContent =
+      "Signing in...";
+
+    const {
+      data,
+      error
+    } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+
+      console.error(
+        "Login error:",
+        error
+      );
+
+      loginMessage.textContent =
+        error.message;
+
+      return;
+    }
+
+    if (!data.session) {
+
+      loginMessage.textContent =
+        "Login failed. Please try again.";
+
+      return;
+    }
+
+    loginMessage.textContent = "";
+
+    adminPassword.value = "";
+
+    showAdmin();
+
+    await loadProperties();
   }
+);
 
-  loginMessage.textContent = "Signing in...";
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) {
-    console.error("Login error:", error);
-    loginMessage.textContent = error.message;
-    return;
-  }
-
-  if (!data.session) {
-    loginMessage.textContent = "Login failed. Please try again.";
-    return;
-  }
-
-  loginMessage.textContent = "";
-
-  adminPassword.value = "";
-
-  showAdmin();
-  await loadProperties();
-});
-
-// --------------------------------------------------
+// ==================================================
 // LOGOUT
-// --------------------------------------------------
+// ==================================================
 
-logoutBtn?.addEventListener("click", async () => {
-  if (!supabase) return;
+logoutBtn?.addEventListener(
+  "click",
+  async () => {
 
-  const { error } = await supabase.auth.signOut();
+    if (!supabase) return;
 
-  if (error) {
-    console.error("Logout error:", error);
-    alert("Unable to sign out. Please try again.");
-    return;
+    const {
+      error
+    } = await supabase.auth.signOut();
+
+    if (error) {
+
+      console.error(
+        "Logout error:",
+        error
+      );
+
+      alert(
+        "Unable to sign out. Please try again."
+      );
+
+      return;
+    }
+
+    resetPropertyForm();
+
+    showLogin();
   }
+);
 
-  resetPropertyForm();
-  showLogin();
-});
-
-// --------------------------------------------------
+// ==================================================
 // LOAD PROPERTIES
-// --------------------------------------------------
+// ==================================================
 
 async function loadProperties() {
-  if (!supabase || !propertyList) return;
 
-  propertyList.innerHTML = `
+  if (!supabase || !adminListings) {
+    return;
+  }
+
+  adminListings.innerHTML = `
     <p class="admin-empty">
       Loading properties...
     </p>
   `;
 
-  const { data, error } = await supabase
+  const {
+    data,
+    error
+  } = await supabase
     .from("Properties")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", {
+      ascending: false
+    });
 
   if (error) {
-    console.error("Load properties error:", error);
 
-    propertyList.innerHTML = `
+    console.error(
+      "Load properties error:",
+      error
+    );
+
+    adminListings.innerHTML = `
       <p class="admin-error">
         Unable to load properties.
       </p>
@@ -202,7 +297,8 @@ async function loadProperties() {
   }
 
   if (!data || data.length === 0) {
-    propertyList.innerHTML = `
+
+    adminListings.innerHTML = `
       <p class="admin-empty">
         No properties have been published yet.
       </p>
@@ -211,67 +307,109 @@ async function loadProperties() {
     return;
   }
 
-  propertyList.innerHTML = "";
+  adminListings.innerHTML = "";
 
   for (const property of data) {
+
     await renderProperty(property);
   }
 }
 
-// --------------------------------------------------
-// RENDER ONE PROPERTY
-// --------------------------------------------------
+// ==================================================
+// RENDER PROPERTY
+// ==================================================
 
 async function renderProperty(property) {
-  const { data: images, error } = await supabase
+
+  const {
+    data: images,
+    error
+  } = await supabase
     .from("Property _image")
     .select("Image_url")
-    .eq("Property_id", property.id)
-    .order("created_at", { ascending: true });
+    .eq(
+      "Property_id",
+      property.id
+    )
+    .order("created_at", {
+      ascending: true
+    });
 
   if (error) {
-    console.error("Load property images error:", error);
+
+    console.error(
+      "Property image error:",
+      error
+    );
   }
 
-  const imageUrls = images
-    ? images.map((image) => image.Image_url).filter(Boolean)
-    : [];
+  const imageUrls =
+    images
+      ? images
+          .map(
+            image => image.Image_url
+          )
+          .filter(Boolean)
+      : [];
 
-  const card = document.createElement("article");
+  const card =
+    document.createElement("article");
 
-  card.className = "admin-property-card";
+  card.className =
+    "admin-property-card";
 
-  const imageHtml = imageUrls.length
-    ? `
-      <img
-        src="${escapeHtml(imageUrls[0])}"
-        alt="${escapeHtml(property.Title || "Property")}"
-        class="admin-property-image"
-      >
-    `
-    : `
-      <div class="admin-property-image admin-no-image">
-        No photo
-      </div>
-    `;
+  const firstImage =
+    imageUrls.length
+      ? imageUrls[0]
+      : "";
 
   card.innerHTML = `
+
     <div class="admin-property-media">
-      ${imageHtml}
+
+      ${
+        firstImage
+          ? `
+            <img
+              src="${escapeHtml(firstImage)}"
+              alt="${escapeHtml(
+                property.Title ||
+                "Property"
+              )}"
+              class="admin-property-image"
+            >
+          `
+          : `
+            <div class="admin-property-image admin-no-image">
+              No photo
+            </div>
+          `
+      }
+
     </div>
+
 
     <div class="admin-property-content">
 
       <div class="admin-property-status">
-        ${escapeHtml(property.Status || "Available")}
+        ${escapeHtml(
+          property.Status ||
+          "Available"
+        )}
       </div>
 
       <h3>
-        ${escapeHtml(property.Title || "Untitled property")}
+        ${escapeHtml(
+          property.Title ||
+          "Untitled property"
+        )}
       </h3>
 
       <p class="admin-property-location">
-        ${escapeHtml(property.Location || "Location not provided")}
+        ${escapeHtml(
+          property.Location ||
+          "Location not provided"
+        )}
       </p>
 
       <p class="admin-property-price">
@@ -279,10 +417,21 @@ async function renderProperty(property) {
       </p>
 
       <div class="admin-property-details">
-        <span>${property.Bedrooms ?? 0} Beds</span>
-        <span>${property.Bathrooms ?? 0} Baths</span>
-        <span>${property.Square_feet ?? 0} Sq Ft</span>
+
+        <span>
+          ${property.Bedrooms ?? 0} Beds
+        </span>
+
+        <span>
+          ${property.Bathrooms ?? 0} Baths
+        </span>
+
+        <span>
+          ${property.Square_feet ?? 0} Sq Ft
+        </span>
+
       </div>
+
 
       <div class="admin-property-actions">
 
@@ -305,36 +454,72 @@ async function renderProperty(property) {
     </div>
   `;
 
-  const editButton = card.querySelector(".edit-property-btn");
-  const deleteButton = card.querySelector(".delete-property-btn");
+  const editButton =
+    card.querySelector(
+      ".edit-property-btn"
+    );
 
-  editButton.addEventListener("click", () => {
-    startEditing(property);
-  });
+  const deleteButton =
+    card.querySelector(
+      ".delete-property-btn"
+    );
 
-  deleteButton.addEventListener("click", () => {
-    deleteProperty(property, imageUrls);
-  });
+  editButton.addEventListener(
+    "click",
+    () => {
+      startEditing(property);
+    }
+  );
 
-  propertyList.appendChild(card);
+  deleteButton.addEventListener(
+    "click",
+    () => {
+      deleteProperty(
+        property,
+        imageUrls,
+        deleteButton
+      );
+    }
+  );
+
+  adminListings.appendChild(card);
 }
 
-// --------------------------------------------------
-// START EDITING
-// --------------------------------------------------
+// ==================================================
+// EDIT
+// ==================================================
 
 function startEditing(property) {
-  editingPropertyId = property.id;
 
-  propertyTitle.value = property.Title || "";
-  propertyDescription.value = property.Description || "";
-  propertyPrice.value = property.Price ?? "";
-  propertyLocation.value = property.Location || "";
-  propertyType.value = property.Property_type || "";
-  propertyStatus.value = property.Status || "";
-  propertyBedrooms.value = property.Bedrooms ?? "";
-  propertyBathrooms.value = property.Bathrooms ?? "";
-  propertySquareFeet.value = property.Square_feet ?? "";
+  editingPropertyId =
+    property.id;
+
+  propertyTitle.value =
+    property.Title || "";
+
+  propertyDescription.value =
+    property.Description || "";
+
+  propertyPrice.value =
+    property.Price ?? "";
+
+  propertyLocation.value =
+    property.Location || "";
+
+  propertyType.value =
+    property.Property_type || "";
+
+  propertyStatus.value =
+    property.Status || "";
+
+  propertyBedrooms.value =
+    property.Bedrooms ?? "";
+
+  propertyBathrooms.value =
+    property.Bathrooms ?? "";
+
+  propertySquareFeet.value =
+    property.Square_feet ?? "";
 
   updateFormMode();
 
@@ -344,227 +529,359 @@ function startEditing(property) {
   });
 }
 
-// --------------------------------------------------
+// ==================================================
 // FORM MODE
-// --------------------------------------------------
+// ==================================================
 
 function updateFormMode() {
+
   if (editingPropertyId) {
-    submitPropertyBtn.textContent = "Save Changes";
+
+    if (formHeading) {
+      formHeading.textContent =
+        "Edit property";
+    }
+
+    submitPropertyBtn.textContent =
+      "Save Changes";
 
     if (cancelEditBtn) {
-      cancelEditBtn.hidden = false;
+      cancelEditBtn.classList.remove(
+        "hidden"
+      );
+
+      cancelEditBtn.hidden =
+        false;
     }
 
     formMessage.textContent =
       "You are editing this property. Photos are optional.";
+
   } else {
-    submitPropertyBtn.textContent = "Publish property";
+
+    if (formHeading) {
+      formHeading.textContent =
+        "Add a property";
+    }
+
+    submitPropertyBtn.textContent =
+      "Publish property";
 
     if (cancelEditBtn) {
-      cancelEditBtn.hidden = true;
+      cancelEditBtn.classList.add(
+        "hidden"
+      );
+
+      cancelEditBtn.hidden =
+        true;
     }
 
     formMessage.textContent = "";
   }
 }
 
-// --------------------------------------------------
+// ==================================================
 // CANCEL EDIT
-// --------------------------------------------------
+// ==================================================
 
-cancelEditBtn?.addEventListener("click", () => {
-  resetPropertyForm();
-});
+cancelEditBtn?.addEventListener(
+  "click",
+  () => {
+    resetPropertyForm();
+  }
+);
 
-// --------------------------------------------------
+// ==================================================
 // PROPERTY FORM
-// --------------------------------------------------
+// ==================================================
 
-propertyForm?.addEventListener("submit", async (event) => {
-  event.preventDefault();
+propertyForm?.addEventListener(
+  "submit",
+  async (event) => {
 
-  if (!supabase) {
-    formMessage.textContent =
-      "The database connection is unavailable. Please refresh the page.";
-    return;
-  }
+    event.preventDefault();
 
-  const title = propertyTitle.value.trim();
-  const description = propertyDescription.value.trim();
-  const price = propertyPrice.value;
-  const locationValue = propertyLocation.value.trim();
-  const propertyTypeValue = propertyType.value;
-  const status = propertyStatus.value;
-  const bedrooms = propertyBedrooms.value;
-  const bathrooms = propertyBathrooms.value;
-  const squareFeet = propertySquareFeet.value;
-
-  if (!title) {
-    formMessage.textContent = "Please enter a property title.";
-    propertyTitle.focus();
-    return;
-  }
-
-  if (!price) {
-    formMessage.textContent = "Please enter a property price.";
-    propertyPrice.focus();
-    return;
-  }
-
-  if (!locationValue) {
-    formMessage.textContent = "Please enter the property location.";
-    propertyLocation.focus();
-    return;
-  }
-
-  const propertyData = {
-    Title: title,
-    Description: description,
-    Price: Number(price),
-    Location: locationValue,
-    Property_type: propertyTypeValue,
-    Status: status,
-    Bedrooms: bedrooms ? Number(bedrooms) : null,
-    Bathrooms: bathrooms ? Number(bathrooms) : null,
-    Square_feet: squareFeet ? Number(squareFeet) : null
-  };
-
-  const photos = propertyPhotos?.files
-    ? Array.from(propertyPhotos.files)
-    : [];
-
-  submitPropertyBtn.disabled = true;
-
-  // ------------------------------------------------
-  // EDIT EXISTING PROPERTY
-  // ------------------------------------------------
-
-  if (editingPropertyId) {
-    formMessage.textContent = "Saving changes...";
-
-    const { error } = await supabase
-      .from("Properties")
-      .update(propertyData)
-      .eq("id", editingPropertyId);
-
-    if (error) {
-      console.error("Update property error:", error);
+    if (!supabase) {
 
       formMessage.textContent =
-        "Unable to save changes: " + error.message;
+        "Database connection unavailable.";
 
-      submitPropertyBtn.disabled = false;
       return;
     }
 
-    // If the admin selected NEW photos while editing,
-    // upload them and add them to the property.
-    if (photos.length > 0) {
-      formMessage.textContent = "Uploading new photos...";
+    const propertyData = {
 
-      try {
-        await uploadPhotos(editingPropertyId, photos);
-      } catch (error) {
-        console.error("Photo upload error:", error);
+      Title:
+        propertyTitle.value.trim(),
 
-        formMessage.textContent =
-          "Property was updated, but the new photos could not be uploaded: " +
-          error.message;
+      Description:
+        propertyDescription.value.trim(),
 
-        submitPropertyBtn.disabled = false;
+      Price:
+        Number(propertyPrice.value),
 
-        await loadProperties();
-        return;
-      }
+      Location:
+        propertyLocation.value.trim(),
+
+      Property_type:
+        propertyType.value,
+
+      Status:
+        propertyStatus.value,
+
+      Bedrooms:
+        propertyBedrooms.value
+          ? Number(propertyBedrooms.value)
+          : null,
+
+      Bathrooms:
+        propertyBathrooms.value
+          ? Number(propertyBathrooms.value)
+          : null,
+
+      Square_feet:
+        propertySquareFeet.value
+          ? Number(propertySquareFeet.value)
+          : null
+    };
+
+    const photos =
+      propertyPhotos?.files
+        ? Array.from(
+            propertyPhotos.files
+          )
+        : [];
+
+    if (!propertyData.Title) {
+
+      formMessage.textContent =
+        "Please enter a property title.";
+
+      return;
     }
 
-    formMessage.textContent = "Property updated successfully.";
+    if (!propertyData.Price) {
 
-    submitPropertyBtn.disabled = false;
+      formMessage.textContent =
+        "Please enter a property price.";
 
-    resetPropertyForm();
-    await loadProperties();
+      return;
+    }
 
-    return;
-  }
+    if (!propertyData.Location) {
 
-  // ------------------------------------------------
-  // CREATE NEW PROPERTY
-  // ------------------------------------------------
+      formMessage.textContent =
+        "Please enter the property location.";
 
-  if (photos.length === 0) {
+      return;
+    }
+
+    submitPropertyBtn.disabled =
+      true;
+
+    // ==================================================
+    // EDIT
+    // ==================================================
+
+    if (editingPropertyId) {
+
+      formMessage.textContent =
+        "Saving changes...";
+
+      const {
+        error
+      } = await supabase
+        .from("Properties")
+        .update(propertyData)
+        .eq(
+          "id",
+          editingPropertyId
+        );
+
+      if (error) {
+
+        console.error(
+          "Update error:",
+          error
+        );
+
+        formMessage.textContent =
+          "Unable to save changes: " +
+          error.message;
+
+        submitPropertyBtn.disabled =
+          false;
+
+        return;
+      }
+
+      if (photos.length > 0) {
+
+        formMessage.textContent =
+          "Uploading new photos...";
+
+        try {
+
+          await uploadPhotos(
+            editingPropertyId,
+            photos
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Photo upload error:",
+            error
+          );
+
+          formMessage.textContent =
+            "Property updated, but photo upload failed: " +
+            error.message;
+
+          submitPropertyBtn.disabled =
+            false;
+
+          await loadProperties();
+
+          return;
+        }
+      }
+
+      alert(
+        "Property updated successfully."
+      );
+
+      resetPropertyForm();
+
+      submitPropertyBtn.disabled =
+        false;
+
+      await loadProperties();
+
+      return;
+    }
+
+    // ==================================================
+    // NEW PROPERTY
+    // ==================================================
+
+    if (photos.length === 0) {
+
+      formMessage.textContent =
+        "Please choose at least one property photo.";
+
+      submitPropertyBtn.disabled =
+        false;
+
+      return;
+    }
+
     formMessage.textContent =
-      "Please choose at least one property photo.";
+      "Publishing property...";
 
-    submitPropertyBtn.disabled = false;
-    return;
+    const {
+      data: newProperty,
+      error
+    } = await supabase
+      .from("Properties")
+      .insert(propertyData)
+      .select()
+      .single();
+
+    if (error) {
+
+      console.error(
+        "Create property error:",
+        error
+      );
+
+      formMessage.textContent =
+        "Unable to publish property: " +
+        error.message;
+
+      submitPropertyBtn.disabled =
+        false;
+
+      return;
+    }
+
+    try {
+
+      formMessage.textContent =
+        "Uploading property photos...";
+
+      await uploadPhotos(
+        newProperty.id,
+        photos
+      );
+
+      alert(
+        "Property published successfully."
+      );
+
+      resetPropertyForm();
+
+      await loadProperties();
+
+    } catch (error) {
+
+      console.error(
+        "Photo upload error:",
+        error
+      );
+
+      formMessage.textContent =
+        "Property created, but photo upload failed: " +
+        error.message;
+
+      await loadProperties();
+    }
+
+    submitPropertyBtn.disabled =
+      false;
   }
+);
 
-  formMessage.textContent = "Publishing property...";
-
-  const { data: newProperty, error } = await supabase
-    .from("Properties")
-    .insert(propertyData)
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Create property error:", error);
-
-    formMessage.textContent =
-      "Unable to publish property: " + error.message;
-
-    submitPropertyBtn.disabled = false;
-    return;
-  }
-
-  try {
-    formMessage.textContent = "Uploading property photos...";
-
-    await uploadPhotos(newProperty.id, photos);
-
-    formMessage.textContent =
-      "Property published successfully.";
-
-    resetPropertyForm();
-
-    await loadProperties();
-
-  } catch (error) {
-    console.error("Photo upload error:", error);
-
-    formMessage.textContent =
-      "Property was created, but the photos could not be uploaded: " +
-      error.message;
-
-    await loadProperties();
-  }
-
-  submitPropertyBtn.disabled = false;
-});
-
-// --------------------------------------------------
+// ==================================================
 // UPLOAD PHOTOS
-// --------------------------------------------------
+// ==================================================
 
-async function uploadPhotos(propertyId, photos) {
+async function uploadPhotos(
+  propertyId,
+  photos
+) {
+
   for (const photo of photos) {
-    const extension =
-      photo.name.split(".").pop()?.toLowerCase() || "jpg";
 
-    const safeExtension = extension.replace(/[^a-z0-9]/g, "");
+    const extension =
+      photo.name
+        .split(".")
+        .pop()
+        ?.toLowerCase() ||
+      "jpg";
+
+    const safeExtension =
+      extension.replace(
+        /[^a-z0-9]/g,
+        ""
+      );
 
     const fileName =
       `${propertyId}/${Date.now()}-${crypto.randomUUID()}.${safeExtension}`;
 
-    const { error: uploadError } = await supabase
+    const {
+      error: uploadError
+    } = await supabase
       .storage
       .from("property-images")
-      .upload(fileName, photo, {
-        cacheControl: "3600",
-        upsert: false
-      });
+      .upload(
+        fileName,
+        photo,
+        {
+          cacheControl: "3600",
+          upsert: false
+        }
+      );
 
     if (uploadError) {
       throw uploadError;
@@ -575,89 +892,147 @@ async function uploadPhotos(propertyId, photos) {
     } = supabase
       .storage
       .from("property-images")
-      .getPublicUrl(fileName);
+      .getPublicUrl(
+        fileName
+      );
 
-    const publicUrl = publicUrlData?.publicUrl;
+    const publicUrl =
+      publicUrlData?.publicUrl;
 
     if (!publicUrl) {
-      throw new Error("Unable to create the photo URL.");
+      throw new Error(
+        "Unable to create photo URL."
+      );
     }
 
-    const { error: imageInsertError } = await supabase
+    const {
+      error: imageError
+    } = await supabase
       .from("Property _image")
       .insert({
         Property_id: propertyId,
         Image_url: publicUrl
       });
 
-    if (imageInsertError) {
-      throw imageInsertError;
+    if (imageError) {
+      throw imageError;
     }
   }
 }
 
-// --------------------------------------------------
+// ==================================================
 // DELETE PROPERTY
-// --------------------------------------------------
+// ==================================================
 
-async function deleteProperty(property, imageUrls) {
-  const confirmed = confirm(
-    `Are you sure you want to delete "${property.Title}"?\n\n` +
-    "This action cannot be undone."
-  );
+async function deleteProperty(
+  property,
+  imageUrls,
+  deleteButton
+) {
 
-  if (!confirmed) return;
-
-  const propertyId = property.id;
-
-  try {
-    // Disable the relevant buttons while deleting.
-    const buttons = document.querySelectorAll(
-      ".delete-property-btn"
+  const confirmed =
+    confirm(
+      `Are you sure you want to delete "${property.Title}"?\n\nThis action cannot be undone.`
     );
 
-    buttons.forEach((button) => {
-      button.disabled = true;
-    });
+  if (!confirmed) {
+    return;
+  }
 
-    // ----------------------------------------------
-    // 1. Delete image database records
-    // ----------------------------------------------
+  const propertyId =
+    property.id;
+
+  try {
+
+    if (deleteButton) {
+      deleteButton.disabled =
+        true;
+
+      deleteButton.textContent =
+        "Deleting...";
+    }
+
+    // ==================================================
+    // 1. GET ALL IMAGE RECORDS
+    // ==================================================
 
     const {
-      error: imageRecordError
+      data: imageRecords,
+      error: imageFetchError
     } = await supabase
       .from("Property _image")
-      .delete()
-      .eq("Property_id", propertyId);
+      .select(
+        "id, Image_url"
+      )
+      .eq(
+        "Property_id",
+        propertyId
+      );
 
-    if (imageRecordError) {
+    if (imageFetchError) {
+
       throw new Error(
-        "The property's image records could not be deleted: " +
-        imageRecordError.message
+        "Could not read the property's images: " +
+        imageFetchError.message
       );
     }
 
-    // ----------------------------------------------
-    // 2. Delete the actual files from Storage
-    // ----------------------------------------------
+    // ==================================================
+    // 2. DELETE IMAGE DATABASE RECORDS
+    // ==================================================
 
-    if (imageUrls && imageUrls.length > 0) {
-      const storagePaths = imageUrls
-        .map(getStoragePathFromPublicUrl)
-        .filter(Boolean);
+    const {
+      error: imageDeleteError
+    } = await supabase
+      .from("Property _image")
+      .delete()
+      .eq(
+        "Property_id",
+        propertyId
+      );
 
-      if (storagePaths.length > 0) {
+    if (imageDeleteError) {
+
+      throw new Error(
+        "Could not delete the property's image records: " +
+        imageDeleteError.message
+      );
+    }
+
+    // ==================================================
+    // 3. DELETE STORAGE FILES
+    // ==================================================
+
+    if (
+      imageRecords &&
+      imageRecords.length > 0
+    ) {
+
+      const storagePaths =
+        imageRecords
+          .map(
+            image =>
+              getStoragePathFromPublicUrl(
+                image.Image_url
+              )
+          )
+          .filter(Boolean);
+
+      if (
+        storagePaths.length > 0
+      ) {
+
         const {
           error: storageError
         } = await supabase
           .storage
           .from("property-images")
-          .remove(storagePaths);
+          .remove(
+            storagePaths
+          );
 
-        // Storage cleanup should not prevent the property
-        // itself from being deleted.
         if (storageError) {
+
           console.warn(
             "Storage cleanup warning:",
             storageError
@@ -666,34 +1041,44 @@ async function deleteProperty(property, imageUrls) {
       }
     }
 
-    // ----------------------------------------------
-    // 3. Delete the property
-    // ----------------------------------------------
+    // ==================================================
+    // 4. DELETE PROPERTY
+    // ==================================================
 
     const {
       error: propertyDeleteError
     } = await supabase
       .from("Properties")
       .delete()
-      .eq("id", propertyId);
+      .eq(
+        "id",
+        propertyId
+      );
 
     if (propertyDeleteError) {
+
       throw new Error(
-        "The property could not be deleted: " +
+        "Could not delete the property: " +
         propertyDeleteError.message
       );
     }
 
-    // ----------------------------------------------
-    // 4. Reload only after successful deletion
-    // ----------------------------------------------
+    // ==================================================
+    // 5. SUCCESS
+    // ==================================================
 
-    alert("Property deleted successfully.");
+    alert(
+      "Property deleted successfully."
+    );
 
     await loadProperties();
 
   } catch (error) {
-    console.error("DELETE PROPERTY ERROR:", error);
+
+    console.error(
+      "DELETE PROPERTY ERROR:",
+      error
+    );
 
     alert(
       "The property was NOT deleted.\n\n" +
@@ -704,35 +1089,55 @@ async function deleteProperty(property, imageUrls) {
   }
 }
 
-// --------------------------------------------------
-// GET STORAGE PATH FROM PUBLIC URL
-// --------------------------------------------------
+// ==================================================
+// STORAGE PATH
+// ==================================================
 
-function getStoragePathFromPublicUrl(url) {
+function getStoragePathFromPublicUrl(
+  url
+) {
+
+  if (!url) {
+    return null;
+  }
+
   try {
-    const marker = "/storage/v1/object/public/property-images/";
 
-    const index = url.indexOf(marker);
+    const marker =
+      "/storage/v1/object/public/property-images/";
+
+    const index =
+      url.indexOf(marker);
 
     if (index === -1) {
       return null;
     }
 
     return decodeURIComponent(
-      url.substring(index + marker.length)
+      url.substring(
+        index + marker.length
+      )
     );
+
   } catch (error) {
-    console.warn("Could not determine storage path:", url);
+
+    console.warn(
+      "Storage path error:",
+      error
+    );
+
     return null;
   }
 }
 
-// --------------------------------------------------
+// ==================================================
 // RESET FORM
-// --------------------------------------------------
+// ==================================================
 
 function resetPropertyForm() {
-  editingPropertyId = null;
+
+  editingPropertyId =
+    null;
 
   propertyForm?.reset();
 
@@ -742,64 +1147,97 @@ function resetPropertyForm() {
 
   updateFormMode();
 
-  if (formMessage) {
-    formMessage.textContent = "";
-  }
-
   if (submitPropertyBtn) {
-    submitPropertyBtn.disabled = false;
+    submitPropertyBtn.disabled =
+      false;
   }
 }
 
-// --------------------------------------------------
+// ==================================================
 // FORMAT PRICE
-// --------------------------------------------------
+// ==================================================
 
 function formatPrice(price) {
-  if (price === null || price === undefined || price === "") {
+
+  if (
+    price === null ||
+    price === undefined ||
+    price === ""
+  ) {
+
     return "Price not provided";
   }
 
-  const number = Number(price);
+  const number =
+    Number(price);
 
   if (Number.isNaN(number)) {
     return String(price);
   }
 
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0
-  }).format(number);
+  return new Intl.NumberFormat(
+    "en-US",
+    {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0
+    }
+  ).format(number);
 }
 
-// --------------------------------------------------
+// ==================================================
 // ESCAPE HTML
-// --------------------------------------------------
+// ==================================================
 
 function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+
+  return String(
+    value ?? ""
+  )
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 }
 
-// --------------------------------------------------
-// START
-// --------------------------------------------------
+// ==================================================
+// START APPLICATION
+// ==================================================
 
-const initialized = await initializeSupabase();
+const initialized =
+  await initializeSupabase();
 
 if (initialized) {
+
   await checkSession();
 
-  supabase.auth.onAuthStateChange(async (_event, session) => {
-    if (session) {
-      showAdmin();
-    } else {
-      showLogin();
+  supabase.auth.onAuthStateChange(
+    async (_event, session) => {
+
+      if (session) {
+
+        showAdmin();
+
+      } else {
+
+        showLogin();
+      }
     }
-  });
+  );
 }
