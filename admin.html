@@ -25,6 +25,7 @@
 
   <!-- LOGIN -->
   <section id="loginSection" class="admin-card">
+
     <p class="eyebrow">PIXIUN REALTY</p>
 
     <h1>Admin sign in</h1>
@@ -37,6 +38,7 @@
         id="adminEmail"
         type="email"
         placeholder="Admin email"
+        autocomplete="email"
         required
       >
 
@@ -44,16 +46,25 @@
         id="adminPassword"
         type="password"
         placeholder="Password"
+        autocomplete="current-password"
         required
       >
 
-      <button class="primary" type="submit">
+      <button
+        class="primary"
+        type="submit"
+      >
         Sign in
       </button>
 
-      <p id="loginMessage" class="form-message"></p>
+      <p
+        id="loginMessage"
+        class="form-message"
+        aria-live="polite"
+      ></p>
 
     </form>
+
   </section>
 
 
@@ -64,10 +75,17 @@
 
       <div>
         <p class="eyebrow">PROPERTY MANAGEMENT</p>
-        <h1>Add a property</h1>
+
+        <h1 id="formHeading">
+          Add a property
+        </h1>
       </div>
 
-      <button id="logoutBtn" class="secondary" type="button">
+      <button
+        id="logoutBtn"
+        class="secondary"
+        type="button"
+      >
         Sign out
       </button>
 
@@ -75,7 +93,10 @@
 
 
     <!-- PROPERTY FORM -->
-    <form id="propertyForm" class="admin-form">
+    <form
+      id="propertyForm"
+      class="admin-form"
+    >
 
       <input
         id="propertyTitle"
@@ -107,7 +128,10 @@
           required
         >
 
-        <select id="propertyType" required>
+        <select
+          id="propertyType"
+          required
+        >
           <option value="">Property type</option>
           <option value="House">House</option>
           <option value="Apartment">Apartment</option>
@@ -116,7 +140,10 @@
           <option value="Land">Land</option>
         </select>
 
-        <select id="propertyStatus" required>
+        <select
+          id="propertyStatus"
+          required
+        >
           <option value="For Sale">For Sale</option>
           <option value="For Rent">For Rent</option>
         </select>
@@ -150,22 +177,54 @@
 
 
       <label class="upload-label">
-        Property photos
+
+        <span id="photoLabel">
+          Property photos
+        </span>
 
         <input
-  id="propertyPhotos"
-  type="file"
-  accept="image/*"
-  multiple
->
+          id="propertyPhotos"
+          type="file"
+          accept="image/*"
+          multiple
+        >
+
       </label>
 
+      <p
+        id="photoHelp"
+        class="form-message"
+      >
+        Select one or more photos for this property.
+      </p>
 
-      <button class="primary" type="submit">
-        Publish property
-      </button>
 
-      <p id="formMessage" class="form-message"></p>
+      <div class="form-actions">
+
+        <button
+          id="submitPropertyBtn"
+          class="primary"
+          type="submit"
+        >
+          Publish property
+        </button>
+
+        <button
+          id="cancelEditBtn"
+          class="secondary hidden"
+          type="button"
+        >
+          Cancel edit
+        </button>
+
+      </div>
+
+
+      <p
+        id="formMessage"
+        class="form-message"
+        aria-live="polite"
+      ></p>
 
     </form>
 
@@ -177,7 +236,10 @@
 
 </main>
 
-<script type="module" src="admin.js?v=2"></script>
+<script
+  type="module"
+  src="admin.js?v=4"
+></script>
 
 </body>
 </html>
