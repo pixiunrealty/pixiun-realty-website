@@ -1,3 +1,12 @@
+/* =========================================================
+   PIXIUN REALTY ADMIN
+========================================================= */
+
+
+/* =========================================================
+   ELEMENTS
+========================================================= */
+
 const loginSection =
   document.getElementById("loginSection");
 
@@ -41,6 +50,10 @@ const photoHelp =
   document.getElementById("photoHelp");
 
 
+/* =========================================================
+   STATE
+========================================================= */
+
 let supabase = null;
 
 let editingPropertyId = null;
@@ -59,15 +72,20 @@ async function initialize() {
 
 
     const configResponse =
-      await fetch("/api/config", {
-        cache: "no-store"
-      });
+      await fetch(
+        "/api/config",
+        {
+          cache: "no-store"
+        }
+      );
 
 
     if (!configResponse.ok) {
+
       throw new Error(
         "Unable to load Supabase configuration."
       );
+
     }
 
 
@@ -75,10 +93,15 @@ async function initialize() {
       await configResponse.json();
 
 
-    if (!config.url || !config.key) {
+    if (
+      !config.url ||
+      !config.key
+    ) {
+
       throw new Error(
         "Supabase configuration is incomplete."
       );
+
     }
 
 
@@ -86,13 +109,6 @@ async function initialize() {
       await import(
         "https://esm.sh/@supabase/supabase-js@2"
       );
-
-
-    if (!supabaseModule.createClient) {
-      throw new Error(
-        "Supabase library failed to load."
-      );
-    }
 
 
     supabase =
@@ -126,6 +142,7 @@ async function initialize() {
 
     }
 
+
   } catch (error) {
 
     console.error(
@@ -133,9 +150,12 @@ async function initialize() {
       error
     );
 
+
     loginMessage.textContent =
       "Unable to connect to the login system. Please refresh the page.";
+
   }
+
 }
 
 
@@ -145,23 +165,38 @@ async function initialize() {
 
 function showLogin() {
 
-  loginSection.classList.remove("hidden");
+  loginSection.classList.remove(
+    "hidden"
+  );
 
-  adminSection.classList.add("hidden");
+  adminSection.classList.add(
+    "hidden"
+  );
 
 }
 
 
 function showDashboard() {
 
-  loginSection.classList.add("hidden");
+  loginSection.classList.add(
+    "hidden"
+  );
 
-  adminSection.classList.remove("hidden");
+  adminSection.classList.remove(
+    "hidden"
+  );
+
+
+  resetPropertyForm();
 
   loadListings();
 
 }
 
+
+/* =========================================================
+   LOGIN
+========================================================= */
 
 loginForm.addEventListener(
   "submit",
@@ -176,28 +211,37 @@ loginForm.addEventListener(
         "Login system is still connecting. Please wait.";
 
       return;
+
     }
 
 
     const email =
       document
-        .getElementById("adminEmail")
+        .getElementById(
+          "adminEmail"
+        )
         .value
         .trim();
 
 
     const password =
       document
-        .getElementById("adminPassword")
+        .getElementById(
+          "adminPassword"
+        )
         .value;
 
 
-    if (!email || !password) {
+    if (
+      !email ||
+      !password
+    ) {
 
       loginMessage.textContent =
         "Please enter your email and password.";
 
       return;
+
     }
 
 
@@ -211,10 +255,11 @@ loginForm.addEventListener(
         data,
         error
       } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
+        await supabase.auth
+          .signInWithPassword({
+            email,
+            password
+          });
 
 
       if (error) {
@@ -235,6 +280,7 @@ loginForm.addEventListener(
 
       loginMessage.textContent = "";
 
+
       showDashboard();
 
 
@@ -244,6 +290,7 @@ loginForm.addEventListener(
         "LOGIN ERROR:",
         error
       );
+
 
       loginMessage.textContent =
         error?.message ||
@@ -263,7 +310,9 @@ logoutBtn.addEventListener(
   "click",
   async () => {
 
-    if (!supabase) return;
+    if (!supabase) {
+      return;
+    }
 
 
     logoutBtn.disabled = true;
@@ -285,8 +334,6 @@ logoutBtn.addEventListener(
       }
 
 
-      editingPropertyId = null;
-
       resetPropertyForm();
 
       showLogin();
@@ -303,6 +350,7 @@ logoutBtn.addEventListener(
         error
       );
 
+
       alert(
         error?.message ||
         "Unable to sign out."
@@ -315,6 +363,7 @@ logoutBtn.addEventListener(
 
       logoutBtn.textContent =
         "Sign out";
+
     }
 
   }
@@ -322,7 +371,7 @@ logoutBtn.addEventListener(
 
 
 /* =========================================================
-   PROPERTY FORM
+   PROPERTY FORM SUBMIT
 ========================================================= */
 
 propertyForm.addEventListener(
@@ -338,19 +387,28 @@ propertyForm.addEventListener(
         "Supabase is not connected.";
 
       return;
+
     }
 
 
+    /* -----------------------------------------------------
+       READ FORM
+    ----------------------------------------------------- */
+
     const title =
       document
-        .getElementById("propertyTitle")
+        .getElementById(
+          "propertyTitle"
+        )
         .value
         .trim();
 
 
     const description =
       document
-        .getElementById("propertyDescription")
+        .getElementById(
+          "propertyDescription"
+        )
         .value
         .trim();
 
@@ -358,34 +416,44 @@ propertyForm.addEventListener(
     const price =
       Number(
         document
-          .getElementById("propertyPrice")
+          .getElementById(
+            "propertyPrice"
+          )
           .value
       );
 
 
     const locationValue =
       document
-        .getElementById("propertyLocation")
+        .getElementById(
+          "propertyLocation"
+        )
         .value
         .trim();
 
 
     const propertyType =
       document
-        .getElementById("propertyType")
+        .getElementById(
+          "propertyType"
+        )
         .value;
 
 
     const propertyStatus =
       document
-        .getElementById("propertyStatus")
+        .getElementById(
+          "propertyStatus"
+        )
         .value;
 
 
     const bedrooms =
       Number(
         document
-          .getElementById("propertyBedrooms")
+          .getElementById(
+            "propertyBedrooms"
+          )
           .value
       );
 
@@ -393,7 +461,9 @@ propertyForm.addEventListener(
     const bathrooms =
       Number(
         document
-          .getElementById("propertyBathrooms")
+          .getElementById(
+            "propertyBathrooms"
+          )
           .value
       );
 
@@ -401,7 +471,9 @@ propertyForm.addEventListener(
     const squareFeet =
       Number(
         document
-          .getElementById("propertySquareFeet")
+          .getElementById(
+            "propertySquareFeet"
+          )
           .value
       );
 
@@ -413,6 +485,10 @@ propertyForm.addEventListener(
 
 
     try {
+
+      /* ---------------------------------------------------
+         SESSION
+      --------------------------------------------------- */
 
       const {
         data: {
@@ -430,6 +506,7 @@ propertyForm.addEventListener(
           "Your session has expired. Please sign in again.";
 
         return;
+
       }
 
 
@@ -437,7 +514,9 @@ propertyForm.addEventListener(
          EDIT EXISTING PROPERTY
       =================================================== */
 
-      if (editingPropertyId) {
+      if (
+        editingPropertyId !== null
+      ) {
 
         submitButton.disabled = true;
 
@@ -451,7 +530,7 @@ propertyForm.addEventListener(
 
 
         const {
-          error: updateError
+          error
         } =
           await supabase
             .from("Properties")
@@ -472,20 +551,21 @@ propertyForm.addEventListener(
             );
 
 
-        if (updateError) {
-          throw updateError;
+        if (error) {
+          throw error;
         }
 
 
-        /* -----------------------------------------------
-           Add NEW photos only if user selected any.
-           Existing photos are NOT touched.
-        ------------------------------------------------ */
+        /* -------------------------------------------------
+           OPTIONAL NEW PHOTOS
+        ------------------------------------------------- */
 
         let uploadedCount = 0;
 
 
-        for (const photo of photos) {
+        for (
+          const photo of photos
+        ) {
 
           const safeName =
             photo.name.replace(
@@ -504,13 +584,18 @@ propertyForm.addEventListener(
             error: uploadError
           } =
             await supabase.storage
-              .from("property-images")
+              .from(
+                "property-images"
+              )
               .upload(
                 filePath,
                 photo,
                 {
-                  cacheControl: "3600",
-                  upsert: false
+                  cacheControl:
+                    "3600",
+
+                  upsert:
+                    false
                 }
               );
 
@@ -523,14 +608,18 @@ propertyForm.addEventListener(
             );
 
             continue;
+
           }
 
 
           const {
-            data: publicUrlData
+            data:
+              publicUrlData
           } =
             supabase.storage
-              .from("property-images")
+              .from(
+                "property-images"
+              )
               .getPublicUrl(
                 filePath
               );
@@ -549,7 +638,9 @@ propertyForm.addEventListener(
             error: imageError
           } =
             await supabase
-              .from("Property _image")
+              .from(
+                "Property _image"
+              )
               .insert({
                 Property_id:
                   editingPropertyId,
@@ -567,14 +658,16 @@ propertyForm.addEventListener(
             );
 
             continue;
+
           }
 
 
           uploadedCount++;
+
         }
 
 
-        const successMessage =
+        const message =
           uploadedCount > 0
             ? `Property updated successfully. ${uploadedCount} new photo${uploadedCount === 1 ? "" : "s"} added.`
             : "Property updated successfully.";
@@ -584,13 +677,14 @@ propertyForm.addEventListener(
 
 
         formMessage.textContent =
-          successMessage;
+          message;
 
 
         await loadListings();
 
 
         return;
+
       }
 
 
@@ -599,11 +693,12 @@ propertyForm.addEventListener(
       =================================================== */
 
       /*
-        Photos are REQUIRED only when creating
-        a brand-new property.
+        ONLY NEW PROPERTIES REQUIRE PHOTOS.
       */
 
-      if (photos.length === 0) {
+      if (
+        photos.length === 0
+      ) {
 
         formMessage.textContent =
           "Please choose at least one property photo.";
@@ -614,6 +709,7 @@ propertyForm.addEventListener(
         photoInput.focus();
 
         return;
+
       }
 
 
@@ -626,9 +722,9 @@ propertyForm.addEventListener(
         "Publishing property...";
 
 
-      /* -----------------------------------------------
-         Create property
-      ------------------------------------------------ */
+      /* ---------------------------------------------------
+         CREATE PROPERTY
+      --------------------------------------------------- */
 
       const {
         data: property,
@@ -660,14 +756,16 @@ propertyForm.addEventListener(
         property.id;
 
 
-      /* -----------------------------------------------
-         Upload photos
-      ------------------------------------------------ */
+      /* ---------------------------------------------------
+         UPLOAD NEW PROPERTY PHOTOS
+      --------------------------------------------------- */
 
       let uploadedCount = 0;
 
 
-      for (const photo of photos) {
+      for (
+        const photo of photos
+      ) {
 
         const safeName =
           photo.name.replace(
@@ -686,13 +784,18 @@ propertyForm.addEventListener(
           error: uploadError
         } =
           await supabase.storage
-            .from("property-images")
+            .from(
+              "property-images"
+            )
             .upload(
               filePath,
               photo,
               {
-                cacheControl: "3600",
-                upsert: false
+                cacheControl:
+                  "3600",
+
+                upsert:
+                  false
               }
             );
 
@@ -705,14 +808,18 @@ propertyForm.addEventListener(
           );
 
           continue;
+
         }
 
 
         const {
-          data: publicUrlData
+          data:
+            publicUrlData
         } =
           supabase.storage
-            .from("property-images")
+            .from(
+              "property-images"
+            )
             .getPublicUrl(
               filePath
             );
@@ -731,7 +838,9 @@ propertyForm.addEventListener(
           error: imageError
         } =
           await supabase
-            .from("Property _image")
+            .from(
+              "Property _image"
+            )
             .insert({
               Property_id:
                 propertyId,
@@ -749,19 +858,18 @@ propertyForm.addEventListener(
           );
 
           continue;
+
         }
 
 
         uploadedCount++;
+
       }
 
 
-      /*
-        If the property was created but every
-        photo failed, tell the user clearly.
-      */
-
-      if (uploadedCount === 0) {
+      if (
+        uploadedCount === 0
+      ) {
 
         formMessage.textContent =
           "Property was created, but the photos could not be uploaded.";
@@ -774,9 +882,8 @@ propertyForm.addEventListener(
       }
 
 
-      propertyForm.reset();
+      resetPropertyForm();
 
-      updateFormMode();
 
       await loadListings();
 
@@ -787,6 +894,7 @@ propertyForm.addEventListener(
         "PROPERTY FORM ERROR:",
         error
       );
+
 
       formMessage.textContent =
         error?.message ||
@@ -800,6 +908,7 @@ propertyForm.addEventListener(
       cancelEditBtn.disabled = false;
 
       updateFormMode();
+
     }
 
   }
@@ -812,7 +921,9 @@ propertyForm.addEventListener(
 
 async function loadListings() {
 
-  if (!supabase) return;
+  if (!supabase) {
+    return;
+  }
 
 
   adminListings.innerHTML =
@@ -848,29 +959,50 @@ async function loadListings() {
 
       adminListings.innerHTML = `
         <div class="admin-empty">
-          <h3>No properties yet</h3>
-          <p>Your published properties will appear here.</p>
+
+          <h3>
+            No properties yet
+          </h3>
+
+          <p>
+            Your published properties will appear here.
+          </p>
+
         </div>
       `;
 
       return;
+
     }
 
 
     adminListings.innerHTML = `
+
       <div class="admin-list-header">
-        <p class="eyebrow">LISTINGS</p>
-        <h2>Your properties</h2>
+
+        <p class="eyebrow">
+          LISTINGS
+        </p>
+
+        <h2>
+          Your properties
+        </h2>
+
       </div>
+
 
       <div class="admin-list">
 
         ${properties.map(
           property => `
 
-          <article class="admin-listing">
+          <article
+            class="admin-listing"
+          >
 
-            <div class="admin-listing-info">
+            <div
+              class="admin-listing-info"
+            >
 
               <h3>
                 ${escapeHtml(
@@ -879,6 +1011,7 @@ async function loadListings() {
                 )}
               </h3>
 
+
               <p>
                 ${escapeHtml(
                   property.Location ||
@@ -886,21 +1019,31 @@ async function loadListings() {
                 )}
               </p>
 
+
               <strong>
                 ${formatPrice(
                   property.Price
                 )}
               </strong>
 
+
               <small>
-                ${property.Bedrooms ?? 0} bed ·
-                ${property.Bathrooms ?? 0} bath ·
-                ${property.Square_feet ?? 0} sq ft
+                ${property.Bedrooms ?? 0}
+                bed ·
+
+                ${property.Bathrooms ?? 0}
+                bath ·
+
+                ${property.Square_feet ?? 0}
+                sq ft
               </small>
 
             </div>
 
-            <div class="admin-listing-actions">
+
+            <div
+              class="admin-listing-actions"
+            >
 
               <button
                 class="secondary edit-property"
@@ -909,6 +1052,7 @@ async function loadListings() {
               >
                 Edit
               </button>
+
 
               <button
                 class="secondary delete-property"
@@ -926,6 +1070,7 @@ async function loadListings() {
         ).join("")}
 
       </div>
+
     `;
 
 
@@ -933,40 +1078,44 @@ async function loadListings() {
       .querySelectorAll(
         ".edit-property"
       )
-      .forEach(button => {
+      .forEach(
+        button => {
 
-        button.addEventListener(
-          "click",
-          () => {
+          button.addEventListener(
+            "click",
+            () => {
 
-            editProperty(
-              button.dataset.id
-            );
+              editProperty(
+                button.dataset.id
+              );
 
-          }
-        );
+            }
+          );
 
-      });
+        }
+      );
 
 
     document
       .querySelectorAll(
         ".delete-property"
       )
-      .forEach(button => {
+      .forEach(
+        button => {
 
-        button.addEventListener(
-          "click",
-          () => {
+          button.addEventListener(
+            "click",
+            () => {
 
-            deleteProperty(
-              button.dataset.id
-            );
+              deleteProperty(
+                button.dataset.id
+              );
 
-          }
-        );
+            }
+          );
 
-      });
+        }
+      );
 
 
   } catch (error) {
@@ -982,7 +1131,9 @@ async function loadListings() {
         Unable to load your listings.
       </p>
     `;
+
   }
+
 }
 
 
@@ -1024,73 +1175,98 @@ async function editProperty(
       throw new Error(
         "Property could not be found."
       );
+
     }
-
-
-    editingPropertyId =
-      propertyId;
-
-
-    document.getElementById(
-      "propertyTitle"
-    ).value =
-      property.Title || "";
-
-
-    document.getElementById(
-      "propertyDescription"
-    ).value =
-      property.Description || "";
-
-
-    document.getElementById(
-      "propertyPrice"
-    ).value =
-      property.Price ?? "";
-
-
-    document.getElementById(
-      "propertyLocation"
-    ).value =
-      property.Location || "";
-
-
-    document.getElementById(
-      "propertyType"
-    ).value =
-      property.Property_type || "";
-
-
-    document.getElementById(
-      "propertyStatus"
-    ).value =
-      property.Status ||
-      "For Sale";
-
-
-    document.getElementById(
-      "propertyBedrooms"
-    ).value =
-      property.Bedrooms ?? "";
-
-
-    document.getElementById(
-      "propertyBathrooms"
-    ).value =
-      property.Bathrooms ?? "";
-
-
-    document.getElementById(
-      "propertySquareFeet"
-    ).value =
-      property.Square_feet ?? "";
 
 
     /*
       IMPORTANT:
-      Clear the file input when entering edit mode.
-      This means the edit starts with NO new photos selected.
-      Existing photos in Supabase remain untouched.
+      Convert the ID to a consistent value.
+    */
+
+    editingPropertyId =
+      String(property.id);
+
+
+    document
+      .getElementById(
+        "propertyTitle"
+      )
+      .value =
+      property.Title || "";
+
+
+    document
+      .getElementById(
+        "propertyDescription"
+      )
+      .value =
+      property.Description || "";
+
+
+    document
+      .getElementById(
+        "propertyPrice"
+      )
+      .value =
+      property.Price ?? "";
+
+
+    document
+      .getElementById(
+        "propertyLocation"
+      )
+      .value =
+      property.Location || "";
+
+
+    document
+      .getElementById(
+        "propertyType"
+      )
+      .value =
+      property.Property_type || "";
+
+
+    document
+      .getElementById(
+        "propertyStatus"
+      )
+      .value =
+      property.Status ||
+      "For Sale";
+
+
+    document
+      .getElementById(
+        "propertyBedrooms"
+      )
+      .value =
+      property.Bedrooms ?? "";
+
+
+    document
+      .getElementById(
+        "propertyBathrooms"
+      )
+      .value =
+      property.Bathrooms ?? "";
+
+
+    document
+      .getElementById(
+        "propertySquareFeet"
+      )
+      .value =
+      property.Square_feet ?? "";
+
+
+    /*
+      NEVER carry existing photos
+      inside the file input.
+
+      Existing photos stay in Supabase.
+      This input is ONLY for adding NEW photos.
     */
 
     photoInput.value = "";
@@ -1100,7 +1276,7 @@ async function editProperty(
 
 
     formMessage.textContent =
-      "Editing property. Photos are optional — your existing photos will stay."
+      "Editing property. Existing photos will stay."
 
 
     propertyForm.scrollIntoView({
@@ -1120,7 +1296,9 @@ async function editProperty(
     formMessage.textContent =
       error?.message ||
       "Unable to load property.";
+
   }
+
 }
 
 
@@ -1130,7 +1308,11 @@ async function editProperty(
 
 function updateFormMode() {
 
-  if (editingPropertyId) {
+  const editing =
+    editingPropertyId !== null;
+
+
+  if (editing) {
 
     formHeading.textContent =
       "Edit property";
@@ -1150,7 +1332,8 @@ function updateFormMode() {
 
 
     photoHelp.textContent =
-      "Your existing photos will stay. Select new photos only if you want to add more.";
+      "Existing photos will stay. Select new photos only if you want to add more.";
+
 
   } else {
 
@@ -1173,7 +1356,9 @@ function updateFormMode() {
 
     photoHelp.textContent =
       "Select one or more photos for this property.";
+
   }
+
 }
 
 
@@ -1191,17 +1376,32 @@ cancelEditBtn.addEventListener(
 );
 
 
+/* =========================================================
+   RESET FORM
+========================================================= */
+
 function resetPropertyForm() {
 
-  editingPropertyId = null;
+  editingPropertyId =
+    null;
+
 
   propertyForm.reset();
 
+
+  /*
+    Explicitly clear file input.
+  */
+
   photoInput.value = "";
 
-  formMessage.textContent = "";
+
+  formMessage.textContent =
+    "";
+
 
   updateFormMode();
+
 }
 
 
@@ -1226,17 +1426,21 @@ async function deleteProperty(
 
   try {
 
-    /*
-      Get existing image records first.
-    */
+    /* -----------------------------------------------------
+       GET IMAGE RECORDS
+    ----------------------------------------------------- */
 
     const {
       data: images,
       error: imageFetchError
     } =
       await supabase
-        .from("Property _image")
-        .select("Image_url")
+        .from(
+          "Property _image"
+        )
+        .select(
+          "Image_url"
+        )
         .eq(
           "Property_id",
           propertyId
@@ -1249,18 +1453,21 @@ async function deleteProperty(
         "IMAGE FETCH ERROR:",
         imageFetchError
       );
+
     }
 
 
-    /*
-      Delete image records.
-    */
+    /* -----------------------------------------------------
+       DELETE IMAGE DATABASE RECORDS
+    ----------------------------------------------------- */
 
     const {
       error: imageDeleteError
     } =
       await supabase
-        .from("Property _image")
+        .from(
+          "Property _image"
+        )
         .delete()
         .eq(
           "Property_id",
@@ -1273,15 +1480,17 @@ async function deleteProperty(
     }
 
 
-    /*
-      Delete property.
-    */
+    /* -----------------------------------------------------
+       DELETE PROPERTY
+    ----------------------------------------------------- */
 
     const {
       error: propertyDeleteError
     } =
       await supabase
-        .from("Properties")
+        .from(
+          "Properties"
+        )
         .delete()
         .eq(
           "id",
@@ -1294,9 +1503,9 @@ async function deleteProperty(
     }
 
 
-    /*
-      Delete associated storage images.
-    */
+    /* -----------------------------------------------------
+       DELETE STORAGE IMAGES
+    ----------------------------------------------------- */
 
     if (
       images &&
@@ -1305,40 +1514,46 @@ async function deleteProperty(
 
       const paths =
         images
-          .map(image => {
+          .map(
+            image => {
 
-            const url =
-              image.Image_url;
-
-
-            if (!url) {
-              return null;
-            }
+              const url =
+                image.Image_url;
 
 
-            const marker =
-              "/property-images/";
+              if (!url) {
+                return null;
+              }
 
 
-            const index =
-              url.indexOf(
-                marker
+              const marker =
+                "/property-images/";
+
+
+              const index =
+                url.indexOf(
+                  marker
+                );
+
+
+              if (
+                index === -1
+              ) {
+
+                return null;
+
+              }
+
+
+              return decodeURIComponent(
+                url.substring(
+                  index +
+                  marker.length
+                )
               );
 
-
-            if (index === -1) {
-              return null;
             }
-
-
-            return decodeURIComponent(
-              url.substring(
-                index +
-                marker.length
-              )
-            );
-
-          })
+          )
           .filter(Boolean);
 
 
@@ -1348,8 +1563,12 @@ async function deleteProperty(
           error: storageError
         } =
           await supabase.storage
-            .from("property-images")
-            .remove(paths);
+            .from(
+              "property-images"
+            )
+            .remove(
+              paths
+            );
 
 
         if (storageError) {
@@ -1358,17 +1577,25 @@ async function deleteProperty(
             "STORAGE DELETE ERROR:",
             storageError
           );
+
         }
+
       }
+
     }
 
 
     if (
-      String(editingPropertyId) ===
-      String(propertyId)
+      String(
+        editingPropertyId
+      ) ===
+      String(
+        propertyId
+      )
     ) {
 
       resetPropertyForm();
+
     }
 
 
@@ -1387,7 +1614,9 @@ async function deleteProperty(
       error?.message ||
       "Unable to delete property."
     );
+
   }
+
 }
 
 
@@ -1395,7 +1624,9 @@ async function deleteProperty(
    HELPERS
 ========================================================= */
 
-function formatPrice(price) {
+function formatPrice(
+  price
+) {
 
   const number =
     Number(price);
@@ -1406,6 +1637,7 @@ function formatPrice(price) {
   ) {
 
     return "Price unavailable";
+
   }
 
 
@@ -1416,11 +1648,16 @@ function formatPrice(price) {
       currency: "USD",
       maximumFractionDigits: 0
     }
-  ).format(number);
+  ).format(
+    number
+  );
+
 }
 
 
-function escapeHtml(value) {
+function escapeHtml(
+  value
+) {
 
   return String(
     value ?? ""
@@ -1445,6 +1682,7 @@ function escapeHtml(value) {
       /'/g,
       "&#039;"
     );
+
 }
 
 
@@ -1460,22 +1698,28 @@ function watchAuth() {
 
 
   supabase.auth.onAuthStateChange(
-    (event, session) => {
+    (
+      event,
+      session
+    ) => {
 
       if (
-        event === "SIGNED_OUT" ||
-        !session
+        event ===
+        "SIGNED_OUT"
       ) {
 
-        editingPropertyId = null;
+        resetPropertyForm();
 
         showLogin();
+
+        return;
 
       }
 
 
       if (
-        event === "SIGNED_IN" &&
+        event ===
+        "SIGNED_IN" &&
         session
       ) {
 
@@ -1485,6 +1729,7 @@ function watchAuth() {
 
     }
   );
+
 }
 
 
@@ -1492,8 +1737,11 @@ function watchAuth() {
    START
 ========================================================= */
 
-initialize().then(() => {
+initialize()
+  .then(
+    () => {
 
-  watchAuth();
+      watchAuth();
 
-});
+    }
+  );
