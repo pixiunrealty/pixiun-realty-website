@@ -3,36 +3,61 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <title>Pixiun Realty | Admin</title>
+
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body class="admin-page">
 
 <header class="site-header">
+
   <a class="brand" href="/">
     <span class="brand-mark">P</span>
+
     <span>
       <strong>PIXIUN</strong>
       <small>REALTY LLC</small>
     </span>
   </a>
 
-  <a class="text-link" href="/">View website →</a>
+  <a class="text-link" href="/">
+    View website →
+  </a>
+
 </header>
+
 
 <main class="admin-wrap">
 
-  <!-- LOGIN -->
-  <section id="loginSection" class="admin-card">
 
-    <p class="eyebrow">PIXIUN REALTY</p>
+  <!-- =====================================================
+       LOGIN
+  ====================================================== -->
 
-    <h1>Admin sign in</h1>
+  <section
+    id="loginSection"
+    class="admin-card"
+  >
 
-    <p>Sign in to manage your property listings.</p>
+    <p class="eyebrow">
+      PIXIUN REALTY
+    </p>
 
-    <form id="loginForm">
+    <h1>
+      Admin sign in
+    </h1>
+
+    <p>
+      Sign in to manage your property listings.
+    </p>
+
+
+    <form
+      id="loginForm"
+      novalidate
+    >
 
       <input
         id="adminEmail"
@@ -60,7 +85,6 @@
       <p
         id="loginMessage"
         class="form-message"
-        aria-live="polite"
       ></p>
 
     </form>
@@ -68,18 +92,33 @@
   </section>
 
 
-  <!-- ADMIN DASHBOARD -->
-  <section id="adminSection" class="admin-card hidden">
+
+  <!-- =====================================================
+       ADMIN DASHBOARD
+  ====================================================== -->
+
+  <section
+    id="adminSection"
+    class="admin-card hidden"
+  >
+
+
+    <!-- HEADER -->
 
     <div class="admin-head">
 
       <div>
-        <p class="eyebrow">PROPERTY MANAGEMENT</p>
+
+        <p class="eyebrow">
+          PROPERTY MANAGEMENT
+        </p>
 
         <h1 id="formHeading">
           Add a property
         </h1>
+
       </div>
+
 
       <button
         id="logoutBtn"
@@ -92,17 +131,23 @@
     </div>
 
 
+
     <!-- PROPERTY FORM -->
+
     <form
       id="propertyForm"
       class="admin-form"
+      novalidate
     >
+
 
       <input
         id="propertyTitle"
+        type="text"
         placeholder="Property title"
         required
       >
+
 
       <textarea
         id="propertyDescription"
@@ -111,7 +156,9 @@
       ></textarea>
 
 
+
       <div class="form-grid">
+
 
         <input
           id="propertyPrice"
@@ -122,31 +169,64 @@
           required
         >
 
+
         <input
           id="propertyLocation"
+          type="text"
           placeholder="City, State"
           required
         >
+
 
         <select
           id="propertyType"
           required
         >
-          <option value="">Property type</option>
-          <option value="House">House</option>
-          <option value="Apartment">Apartment</option>
-          <option value="Condo">Condo</option>
-          <option value="Townhouse">Townhouse</option>
-          <option value="Land">Land</option>
+
+          <option value="">
+            Property type
+          </option>
+
+          <option value="House">
+            House
+          </option>
+
+          <option value="Apartment">
+            Apartment
+          </option>
+
+          <option value="Condo">
+            Condo
+          </option>
+
+          <option value="Townhouse">
+            Townhouse
+          </option>
+
+          <option value="Land">
+            Land
+          </option>
+
         </select>
+
+
 
         <select
           id="propertyStatus"
           required
         >
-          <option value="For Sale">For Sale</option>
-          <option value="For Rent">For Rent</option>
+
+          <option value="For Sale">
+            For Sale
+          </option>
+
+          <option value="For Rent">
+            For Rent
+          </option>
+
         </select>
+
+
 
         <input
           id="propertyBedrooms"
@@ -156,6 +236,7 @@
           required
         >
 
+
         <input
           id="propertyBathrooms"
           type="number"
@@ -164,6 +245,7 @@
           placeholder="Bathrooms"
           required
         >
+
 
         <input
           id="propertySquareFeet"
@@ -176,11 +258,21 @@
       </div>
 
 
-      <label class="upload-label">
 
-        <span id="photoLabel">
+      <!-- =================================================
+           PHOTOS
+      ================================================== -->
+
+      <div class="photo-upload-area">
+
+        <label
+          id="photoLabel"
+          class="upload-label"
+          for="propertyPhotos"
+        >
           Property photos
-        </span>
+        </label>
+
 
         <input
           id="propertyPhotos"
@@ -189,17 +281,23 @@
           multiple
         >
 
-      </label>
 
-      <p
-        id="photoHelp"
-        class="form-message"
-      >
-        Select one or more photos for this property.
-      </p>
+        <p
+          id="photoHelp"
+          class="photo-help"
+        >
+          Select one or more photos for this property.
+        </p>
+
+      </div>
 
 
-      <div class="form-actions">
+
+      <!-- =================================================
+           FORM BUTTONS
+      ================================================== -->
+
+      <div class="admin-form-actions">
 
         <button
           id="submitPropertyBtn"
@@ -208,6 +306,7 @@
         >
           Publish property
         </button>
+
 
         <button
           id="cancelEditBtn"
@@ -223,22 +322,27 @@
       <p
         id="formMessage"
         class="form-message"
-        aria-live="polite"
       ></p>
 
     </form>
 
 
-    <!-- EXISTING LISTINGS -->
+
+    <!-- =====================================================
+         LISTINGS
+    ====================================================== -->
+
     <div id="adminListings"></div>
 
   </section>
 
 </main>
 
+
+
 <script
   type="module"
-  src="admin.js?v=4"
+  src="admin.js?v=5"
 ></script>
 
 </body>
