@@ -31,33 +31,17 @@
 
 <main class="admin-wrap">
 
+  <!-- LOGIN -->
 
-  <!-- =====================================================
-       LOGIN
-  ====================================================== -->
+  <section id="loginSection" class="admin-card">
 
-  <section
-    id="loginSection"
-    class="admin-card"
-  >
+    <p class="eyebrow">PIXIUN REALTY</p>
 
-    <p class="eyebrow">
-      PIXIUN REALTY
-    </p>
+    <h1>Admin sign in</h1>
 
-    <h1>
-      Admin sign in
-    </h1>
+    <p>Sign in to manage your property listings.</p>
 
-    <p>
-      Sign in to manage your property listings.
-    </p>
-
-
-    <form
-      id="loginForm"
-      novalidate
-    >
+    <form id="loginForm" novalidate>
 
       <input
         id="adminEmail"
@@ -75,35 +59,20 @@
         required
       >
 
-      <button
-        class="primary"
-        type="submit"
-      >
+      <button class="primary" type="submit">
         Sign in
       </button>
 
-      <p
-        id="loginMessage"
-        class="form-message"
-      ></p>
+      <p id="loginMessage" class="form-message"></p>
 
     </form>
 
   </section>
 
 
+  <!-- ADMIN -->
 
-  <!-- =====================================================
-       ADMIN DASHBOARD
-  ====================================================== -->
-
-  <section
-    id="adminSection"
-    class="admin-card hidden"
-  >
-
-
-    <!-- HEADER -->
+  <section id="adminSection" class="admin-card hidden">
 
     <div class="admin-head">
 
@@ -119,7 +88,6 @@
 
       </div>
 
-
       <button
         id="logoutBtn"
         class="secondary"
@@ -131,7 +99,6 @@
     </div>
 
 
-
     <!-- PROPERTY FORM -->
 
     <form
@@ -140,14 +107,12 @@
       novalidate
     >
 
-
       <input
         id="propertyTitle"
         type="text"
         placeholder="Property title"
         required
       >
-
 
       <textarea
         id="propertyDescription"
@@ -156,9 +121,7 @@
       ></textarea>
 
 
-
       <div class="form-grid">
-
 
         <input
           id="propertyPrice"
@@ -169,7 +132,6 @@
           required
         >
 
-
         <input
           id="propertyLocation"
           type="text"
@@ -177,44 +139,22 @@
           required
         >
 
-
-        <select
-          id="propertyType"
-          required
-        >
+        <select id="propertyType" required>
 
           <option value="">
             Property type
           </option>
 
-          <option value="House">
-            House
-          </option>
-
-          <option value="Apartment">
-            Apartment
-          </option>
-
-          <option value="Condo">
-            Condo
-          </option>
-
-          <option value="Townhouse">
-            Townhouse
-          </option>
-
-          <option value="Land">
-            Land
-          </option>
+          <option value="House">House</option>
+          <option value="Apartment">Apartment</option>
+          <option value="Condo">Condo</option>
+          <option value="Townhouse">Townhouse</option>
+          <option value="Land">Land</option>
 
         </select>
 
 
-
-        <select
-          id="propertyStatus"
-          required
-        >
+        <select id="propertyStatus" required>
 
           <option value="For Sale">
             For Sale
@@ -227,7 +167,6 @@
         </select>
 
 
-
         <input
           id="propertyBedrooms"
           type="number"
@@ -235,7 +174,6 @@
           placeholder="Bedrooms"
           required
         >
-
 
         <input
           id="propertyBathrooms"
@@ -245,7 +183,6 @@
           placeholder="Bathrooms"
           required
         >
-
 
         <input
           id="propertySquareFeet"
@@ -258,44 +195,7 @@
       </div>
 
 
-
-      <!-- =================================================
-           PHOTOS
-      ================================================== -->
-
-      <div class="photo-upload-area">
-
-        <label
-          id="photoLabel"
-          class="upload-label"
-          for="propertyPhotos"
-        >
-          Property photos
-        </label>
-
-
-        <input
-          id="propertyPhotos"
-          type="file"
-          accept="image/*"
-          multiple
-        >
-
-
-        <p
-          id="photoHelp"
-          class="photo-help"
-        >
-          Select one or more photos for this property.
-        </p>
-
-      </div>
-
-
-
-      <!-- =================================================
-           FORM BUTTONS
-      ================================================== -->
+      <!-- BUTTONS -->
 
       <div class="admin-form-actions">
 
@@ -307,7 +207,6 @@
           Publish property
         </button>
 
-
         <button
           id="cancelEditBtn"
           class="secondary hidden"
@@ -318,19 +217,44 @@
 
       </div>
 
-
-      <p
-        id="formMessage"
-        class="form-message"
-      ></p>
+      <p id="formMessage" class="form-message"></p>
 
     </form>
 
 
+    <!-- =================================================
+         PHOTO SELECTOR
+         IMPORTANT: THIS IS OUTSIDE THE FORM.
+    ================================================== -->
 
-    <!-- =====================================================
-         LISTINGS
-    ====================================================== -->
+    <div class="photo-upload-area">
+
+      <label
+        id="photoLabel"
+        class="upload-label"
+        for="propertyPhotos"
+      >
+        Property photos
+      </label>
+
+      <input
+        id="propertyPhotos"
+        type="file"
+        accept="image/*"
+        multiple
+      >
+
+      <p
+        id="photoHelp"
+        class="photo-help"
+      >
+        Select one or more photos for this property.
+      </p>
+
+    </div>
+
+
+    <!-- LISTINGS -->
 
     <div id="adminListings"></div>
 
@@ -339,10 +263,9 @@
 </main>
 
 
-
 <script
   type="module"
-  src="admin.js?v=5"
+  src="admin.js?v=6"
 ></script>
 
 </body>
