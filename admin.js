@@ -4,63 +4,171 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 let supabase = null;
 let editingPropertyId = null;
 
+let currentPropertyFilter = "all";
+let currentInquiryFilter = "all";
+
 
 /* =================================================
    DOM ELEMENTS
 ================================================= */
 
-const loginSection = document.getElementById("loginSection");
-const adminSection = document.getElementById("adminSection");
+const loginSection =
+  document.getElementById("loginSection");
 
-const loginForm = document.getElementById("loginForm");
-const adminEmail = document.getElementById("adminEmail");
-const adminPassword = document.getElementById("adminPassword");
-const loginMessage = document.getElementById("loginMessage");
+const adminSection =
+  document.getElementById("adminSection");
 
-const logoutBtn = document.getElementById("logoutBtn");
+const loginForm =
+  document.getElementById("loginForm");
 
-const propertyForm = document.getElementById("propertyForm");
-const propertyTitle = document.getElementById("propertyTitle");
-const propertyDescription = document.getElementById("propertyDescription");
-const propertyPrice = document.getElementById("propertyPrice");
-const propertyLocation = document.getElementById("propertyLocation");
-const propertyType = document.getElementById("propertyType");
-const propertyStatus = document.getElementById("propertyStatus");
-const propertyBedrooms = document.getElementById("propertyBedrooms");
-const propertyBathrooms = document.getElementById("propertyBathrooms");
-const propertySquareFeet = document.getElementById("propertySquareFeet");
+const adminEmail =
+  document.getElementById("adminEmail");
 
-const submitPropertyBtn = document.getElementById("submitPropertyBtn");
-const cancelEditBtn = document.getElementById("cancelEditBtn");
+const adminPassword =
+  document.getElementById("adminPassword");
 
-const formHeading = document.getElementById("formHeading");
-const formMessage = document.getElementById("formMessage");
+const loginMessage =
+  document.getElementById("loginMessage");
 
-const propertyPhotos = document.getElementById("propertyPhotos");
-const photoHelp = document.getElementById("photoHelp");
-const photoLabel = document.getElementById("photoLabel");
+const logoutBtn =
+  document.getElementById("logoutBtn");
 
-const adminListings = document.getElementById("adminListings");
 
-const adminInquiries = document.getElementById("adminInquiries");
-const refreshInquiriesBtn = document.getElementById("refreshInquiriesBtn");
+const propertyForm =
+  document.getElementById("propertyForm");
+
+const propertyTitle =
+  document.getElementById("propertyTitle");
+
+const propertyDescription =
+  document.getElementById("propertyDescription");
+
+const propertyPrice =
+  document.getElementById("propertyPrice");
+
+const propertyLocation =
+  document.getElementById("propertyLocation");
+
+const propertyType =
+  document.getElementById("propertyType");
+
+const propertyStatus =
+  document.getElementById("propertyStatus");
+
+const propertyBedrooms =
+  document.getElementById("propertyBedrooms");
+
+const propertyBathrooms =
+  document.getElementById("propertyBathrooms");
+
+const propertySquareFeet =
+  document.getElementById("propertySquareFeet");
+
+
+const submitPropertyBtn =
+  document.getElementById("submitPropertyBtn");
+
+const cancelEditBtn =
+  document.getElementById("cancelEditBtn");
+
+const formHeading =
+  document.getElementById("formHeading");
+
+const formMessage =
+  document.getElementById("formMessage");
+
+
+const propertyPhotos =
+  document.getElementById("propertyPhotos");
+
+const photoHelp =
+  document.getElementById("photoHelp");
+
+const photoLabel =
+  document.getElementById("photoLabel");
+
+
+const adminListings =
+  document.getElementById("adminListings");
+
+
+const adminInquiries =
+  document.getElementById("adminInquiries");
+
+const refreshInquiriesBtn =
+  document.getElementById("refreshInquiriesBtn");
 
 
 /* =================================================
-   DASHBOARD STAT ELEMENTS
+   OVERVIEW ELEMENTS
 ================================================= */
 
-const statTotalProperties =
-  document.getElementById("statTotalProperties");
+const totalPropertiesCount =
+  document.getElementById("totalPropertiesCount");
 
-const statForSale =
-  document.getElementById("statForSale");
+const forSaleCount =
+  document.getElementById("forSaleCount");
 
-const statForRent =
-  document.getElementById("statForRent");
+const forRentCount =
+  document.getElementById("forRentCount");
 
-const statNewInquiries =
-  document.getElementById("statNewInquiries");
+const totalInquiriesCount =
+  document.getElementById("totalInquiriesCount");
+
+const newInquiriesCount =
+  document.getElementById("newInquiriesCount");
+
+const contactedInquiriesCount =
+  document.getElementById("contactedInquiriesCount");
+
+const closedInquiriesCount =
+  document.getElementById("closedInquiriesCount");
+
+
+const totalPropertiesCard =
+  document.getElementById("totalPropertiesCard");
+
+const forSaleCard =
+  document.getElementById("forSaleCard");
+
+const forRentCard =
+  document.getElementById("forRentCard");
+
+const totalInquiriesCard =
+  document.getElementById("totalInquiriesCard");
+
+const newInquiriesCard =
+  document.getElementById("newInquiriesCard");
+
+const contactedInquiriesCard =
+  document.getElementById("contactedInquiriesCard");
+
+const closedInquiriesCard =
+  document.getElementById("closedInquiriesCard");
+
+
+/* =================================================
+   FILTER ELEMENTS
+================================================= */
+
+const propertyFilterBar =
+  document.getElementById("propertyFilterBar");
+
+const propertyFilterLabel =
+  document.getElementById("propertyFilterLabel");
+
+const clearPropertyFilterBtn =
+  document.getElementById("clearPropertyFilterBtn");
+
+
+const inquiryFilterBar =
+  document.getElementById("inquiryFilterBar");
+
+const inquiryFilterLabel =
+  document.getElementById("inquiryFilterLabel");
+
+const clearInquiryFilterBtn =
+  document.getElementById("clearInquiryFilterBtn");
 
 
 /* =================================================
@@ -71,28 +179,38 @@ async function initializeSupabase() {
 
   try {
 
-    const response = await fetch("/api/config");
+    const response =
+      await fetch("/api/config");
 
     if (!response.ok) {
-      throw new Error("Unable to load Supabase configuration.");
+      throw new Error(
+        "Unable to load Supabase configuration."
+      );
     }
 
-    const config = await response.json();
+    const config =
+      await response.json();
 
     if (!config.url || !config.key) {
-      throw new Error("Supabase configuration is incomplete.");
+      throw new Error(
+        "Supabase configuration is incomplete."
+      );
     }
 
-    supabase = createClient(
-      config.url,
-      config.key
-    );
+    supabase =
+      createClient(
+        config.url,
+        config.key
+      );
 
     return true;
 
   } catch (error) {
 
-    console.error("Supabase initialization error:", error);
+    console.error(
+      "Supabase initialization error:",
+      error
+    );
 
     loginMessage.textContent =
       "Unable to connect to Supabase.";
@@ -103,7 +221,7 @@ async function initializeSupabase() {
 
 
 /* =================================================
-   LOGIN / ADMIN VISIBILITY
+   SESSION / VISIBILITY
 ================================================= */
 
 function showLogin() {
@@ -122,10 +240,6 @@ function showAdmin() {
 }
 
 
-/* =================================================
-   SESSION CHECK
-================================================= */
-
 async function checkSession() {
 
   if (!supabase) return;
@@ -137,7 +251,10 @@ async function checkSession() {
 
   if (error) {
 
-    console.error("Session error:", error);
+    console.error(
+      "Session error:",
+      error
+    );
 
     showLogin();
 
@@ -156,6 +273,7 @@ async function checkSession() {
     showLogin();
 
   }
+
 }
 
 
@@ -163,82 +281,472 @@ async function checkSession() {
    LOGIN
 ================================================= */
 
-loginForm.addEventListener("submit", async (event) => {
+loginForm.addEventListener(
+  "submit",
+  async (event) => {
 
-  event.preventDefault();
+    event.preventDefault();
 
-  loginMessage.textContent = "";
+    loginMessage.textContent = "";
 
-  const email = adminEmail.value.trim();
-  const password = adminPassword.value;
+    const email =
+      adminEmail.value.trim();
 
-  if (!email || !password) {
+    const password =
+      adminPassword.value;
 
-    loginMessage.textContent =
-      "Enter your email and password.";
+    if (!email || !password) {
 
-    return;
-  }
+      loginMessage.textContent =
+        "Enter your email and password.";
 
-  const button = loginForm.querySelector("button");
-
-  button.disabled = true;
-  button.textContent = "Signing in...";
-
-  try {
-
-    const {
-      error
-    } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (error) {
-      throw error;
+      return;
     }
 
-    adminPassword.value = "";
+    const button =
+      loginForm.querySelector("button");
 
-    showAdmin();
+    button.disabled = true;
+    button.textContent =
+      "Signing in...";
 
-    await loadProperties();
-    await loadInquiries();
+    try {
 
-  } catch (error) {
+      const {
+        error
+      } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
 
-    console.error("Login error:", error);
+      if (error) {
+        throw error;
+      }
 
-    loginMessage.textContent =
-      error.message || "Unable to sign in.";
+      adminPassword.value = "";
 
-  } finally {
+      showAdmin();
 
-    button.disabled = false;
-    button.textContent = "Sign in";
+      await loadProperties();
+      await loadInquiries();
+
+    } catch (error) {
+
+      console.error(
+        "Login error:",
+        error
+      );
+
+      loginMessage.textContent =
+        error.message ||
+        "Unable to sign in.";
+
+    } finally {
+
+      button.disabled = false;
+      button.textContent =
+        "Sign in";
+
+    }
 
   }
-
-});
+);
 
 
 /* =================================================
    LOGOUT
 ================================================= */
 
-logoutBtn.addEventListener("click", async () => {
+logoutBtn.addEventListener(
+  "click",
+  async () => {
 
-  if (!supabase) return;
+    if (!supabase) return;
 
-  await supabase.auth.signOut();
+    await supabase.auth.signOut();
 
-  editingPropertyId = null;
+    editingPropertyId = null;
 
-  resetPropertyForm();
+    resetPropertyForm();
 
-  showLogin();
+    showLogin();
 
-});
+  }
+);
+
+
+/* =================================================
+   DASHBOARD NAVIGATION
+================================================= */
+
+function goToProperties(
+  filter = "all"
+) {
+
+  currentPropertyFilter =
+    filter;
+
+  loadProperties();
+
+  const section =
+    document.getElementById(
+      "propertyListingsSection"
+    );
+
+  if (section) {
+
+    section.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+
+  }
+
+}
+
+
+function goToInquiries(
+  filter = "all"
+) {
+
+  currentInquiryFilter =
+    filter;
+
+  loadInquiries();
+
+  const section =
+    document.getElementById(
+      "inquiriesSection"
+    );
+
+  if (section) {
+
+    section.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+
+  }
+
+}
+
+
+/* =================================================
+   DASHBOARD CARD EVENTS
+================================================= */
+
+if (totalPropertiesCard) {
+
+  totalPropertiesCard.addEventListener(
+    "click",
+    () => {
+      goToProperties("all");
+    }
+  );
+
+}
+
+
+if (forSaleCard) {
+
+  forSaleCard.addEventListener(
+    "click",
+    () => {
+      goToProperties("for sale");
+    }
+  );
+
+}
+
+
+if (forRentCard) {
+
+  forRentCard.addEventListener(
+    "click",
+    () => {
+      goToProperties("for rent");
+    }
+  );
+
+}
+
+
+if (totalInquiriesCard) {
+
+  totalInquiriesCard.addEventListener(
+    "click",
+    () => {
+      goToInquiries("all");
+    }
+  );
+
+}
+
+
+if (newInquiriesCard) {
+
+  newInquiriesCard.addEventListener(
+    "click",
+    () => {
+      goToInquiries("new");
+    }
+  );
+
+}
+
+
+if (contactedInquiriesCard) {
+
+  contactedInquiriesCard.addEventListener(
+    "click",
+    () => {
+      goToInquiries("contacted");
+    }
+  );
+
+}
+
+
+if (closedInquiriesCard) {
+
+  closedInquiriesCard.addEventListener(
+    "click",
+    () => {
+      goToInquiries("closed");
+    }
+  );
+
+}
+
+
+/* =================================================
+   PROPERTY OVERVIEW COUNTS
+================================================= */
+
+function updatePropertyOverview(
+  properties
+) {
+
+  const list =
+    Array.isArray(properties)
+      ? properties
+      : [];
+
+  let forSale = 0;
+  let forRent = 0;
+
+  list.forEach(
+    property => {
+
+      const status =
+        String(
+          property.Status ??
+          property.status ??
+          ""
+        )
+          .trim()
+          .toLowerCase();
+
+      if (status === "for sale") {
+        forSale++;
+      }
+
+      if (status === "for rent") {
+        forRent++;
+      }
+
+    }
+  );
+
+  if (totalPropertiesCount) {
+    totalPropertiesCount.textContent =
+      String(list.length);
+  }
+
+  if (forSaleCount) {
+    forSaleCount.textContent =
+      String(forSale);
+  }
+
+  if (forRentCount) {
+    forRentCount.textContent =
+      String(forRent);
+  }
+
+}
+
+
+/* =================================================
+   INQUIRY OVERVIEW COUNTS
+================================================= */
+
+function updateInquiryOverview(
+  inquiries
+) {
+
+  const list =
+    Array.isArray(inquiries)
+      ? inquiries
+      : [];
+
+  let newCount = 0;
+  let contactedCount = 0;
+  let closedCount = 0;
+
+  list.forEach(
+    inquiry => {
+
+      const status =
+        String(
+          inquiry.status ||
+          "New"
+        )
+          .trim()
+          .toLowerCase();
+
+      if (status === "new") {
+        newCount++;
+      }
+
+      if (status === "contacted") {
+        contactedCount++;
+      }
+
+      if (status === "closed") {
+        closedCount++;
+      }
+
+    }
+  );
+
+  if (totalInquiriesCount) {
+    totalInquiriesCount.textContent =
+      String(list.length);
+  }
+
+  if (newInquiriesCount) {
+    newInquiriesCount.textContent =
+      String(newCount);
+  }
+
+  if (contactedInquiriesCount) {
+    contactedInquiriesCount.textContent =
+      String(contactedCount);
+  }
+
+  if (closedInquiriesCount) {
+    closedInquiriesCount.textContent =
+      String(closedCount);
+  }
+
+}
+
+
+/* =================================================
+   PROPERTY FILTER UI
+================================================= */
+
+function updatePropertyFilterUI() {
+
+  if (!propertyFilterBar) return;
+
+  if (
+    !currentPropertyFilter ||
+    currentPropertyFilter === "all"
+  ) {
+
+    propertyFilterBar.classList.add(
+      "hidden"
+    );
+
+    return;
+  }
+
+  const label =
+    currentPropertyFilter === "for sale"
+      ? "Showing properties for sale"
+      : "Showing properties for rent";
+
+  propertyFilterLabel.textContent =
+    label;
+
+  propertyFilterBar.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+if (clearPropertyFilterBtn) {
+
+  clearPropertyFilterBtn.addEventListener(
+    "click",
+    () => {
+
+      currentPropertyFilter =
+        "all";
+
+      loadProperties();
+
+    }
+  );
+
+}
+
+
+/* =================================================
+   INQUIRY FILTER UI
+================================================= */
+
+function updateInquiryFilterUI() {
+
+  if (!inquiryFilterBar) return;
+
+  if (
+    !currentInquiryFilter ||
+    currentInquiryFilter === "all"
+  ) {
+
+    inquiryFilterBar.classList.add(
+      "hidden"
+    );
+
+    return;
+  }
+
+  const labels = {
+    new: "Showing new inquiries",
+    contacted: "Showing contacted inquiries",
+    closed: "Showing closed inquiries"
+  };
+
+  inquiryFilterLabel.textContent =
+    labels[currentInquiryFilter] ||
+    "Showing filtered inquiries";
+
+  inquiryFilterBar.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+if (clearInquiryFilterBtn) {
+
+  clearInquiryFilterBtn.addEventListener(
+    "click",
+    () => {
+
+      currentInquiryFilter =
+        "all";
+
+      loadInquiries();
+
+    }
+  );
+
+}
 
 
 /* =================================================
@@ -247,7 +755,12 @@ logoutBtn.addEventListener("click", async () => {
 
 async function loadProperties() {
 
-  if (!supabase || !adminListings) return;
+  if (
+    !supabase ||
+    !adminListings
+  ) {
+    return;
+  }
 
   adminListings.innerHTML =
     `<p class="admin-empty">Loading properties...</p>`;
@@ -255,97 +768,105 @@ async function loadProperties() {
   const {
     data,
     error
-  } = await supabase
-    .from("Properties")
-    .select("*")
-    .order("created_at", {
-      ascending: false
-    });
+  } =
+    await supabase
+      .from("Properties")
+      .select("*")
+      .order(
+        "created_at",
+        {
+          ascending: false
+        }
+      );
 
   if (error) {
 
-    console.error("Load properties error:", error);
+    console.error(
+      "Load properties error:",
+      error
+    );
 
     adminListings.innerHTML =
       `<p class="admin-error">Unable to load properties.</p>`;
 
-    updatePropertyStats([]);
+    return;
+  }
+
+  const properties =
+    data || [];
+
+  updatePropertyOverview(
+    properties
+  );
+
+  updatePropertyFilterUI();
+
+
+  let filteredProperties =
+    properties;
+
+
+  if (
+    currentPropertyFilter !== "all"
+  ) {
+
+    filteredProperties =
+      properties.filter(
+        property => {
+
+          const status =
+            String(
+              property.Status ??
+              property.status ??
+              ""
+            )
+              .trim()
+              .toLowerCase();
+
+          return (
+            status ===
+            currentPropertyFilter
+          );
+
+        }
+      );
+
+  }
+
+
+  if (
+    filteredProperties.length === 0
+  ) {
+
+    if (
+      properties.length === 0
+    ) {
+
+      adminListings.innerHTML =
+        `<p class="admin-empty">No properties yet.</p>`;
+
+    } else {
+
+      adminListings.innerHTML =
+        `<p class="admin-empty">No properties match this filter.</p>`;
+
+    }
 
     return;
   }
 
-  updatePropertyStats(data || []);
-
-  if (!data || data.length === 0) {
-
-    adminListings.innerHTML =
-      `<p class="admin-empty">No properties yet.</p>`;
-
-    return;
-  }
 
   adminListings.innerHTML = "";
 
-  for (const property of data) {
 
-    await renderProperty(property);
+  for (
+    const property of filteredProperties
+  ) {
 
-  }
+    await renderProperty(
+      property
+    );
 
-}
-
-
-/* =================================================
-   DASHBOARD PROPERTY STATS
-================================================= */
-
-function updatePropertyStats(properties) {
-
-  const total =
-    properties.length;
-
-  const forSale =
-    properties.filter(property => {
-
-      const status =
-        String(
-          property.Status ??
-          property.status ??
-          ""
-        ).trim().toLowerCase();
-
-      return status === "for sale";
-
-    }).length;
-
-  const forRent =
-    properties.filter(property => {
-
-      const status =
-        String(
-          property.Status ??
-          property.status ??
-          ""
-        ).trim().toLowerCase();
-
-      return status === "for rent";
-
-    }).length;
-
-
-  if (statTotalProperties) {
-    statTotalProperties.textContent =
-      String(total);
-  }
-
-  if (statForSale) {
-    statForSale.textContent =
-      String(forSale);
-  }
-
-  if (statForRent) {
-    statForRent.textContent =
-      String(forRent);
   }
 
 }
@@ -355,22 +876,35 @@ function updatePropertyStats(properties) {
    RENDER PROPERTY
 ================================================= */
 
-async function renderProperty(property) {
+async function renderProperty(
+  property
+) {
 
-  const card = document.createElement("div");
+  const card =
+    document.createElement("div");
 
-  card.className = "admin-property-card";
+  card.className =
+    "admin-property-card";
+
 
   const {
     data: images,
     error
-  } = await supabase
-    .from("Property _image")
-    .select("Image_url")
-    .eq("Property_id", property.id)
-    .order("created_at", {
-      ascending: true
-    });
+  } =
+    await supabase
+      .from("Property _image")
+      .select("Image_url")
+      .eq(
+        "Property_id",
+        property.id
+      )
+      .order(
+        "created_at",
+        {
+          ascending: true
+        }
+      );
+
 
   if (error) {
 
@@ -381,58 +915,72 @@ async function renderProperty(property) {
 
   }
 
+
   const imageList =
     (images || [])
-      .map(item => item.Image_url)
+      .map(
+        item => item.Image_url
+      )
       .filter(Boolean);
+
 
   const imageUrl =
     imageList[0] || "";
+
 
   const title =
     property.Title ??
     property.title ??
     "Untitled property";
 
+
   const description =
     property.Description ??
     property.description ??
     "";
+
 
   const price =
     property.Price ??
     property.price ??
     0;
 
+
   const location =
     property.Location ??
     property.location ??
     "";
+
 
   const type =
     property.Property_type ??
     property.property_type ??
     "";
 
+
   const status =
     property.Status ??
     property.status ??
     "";
+
 
   const bedrooms =
     property.Bedrooms ??
     property.bedrooms ??
     0;
 
+
   const bathrooms =
     property.Bathrooms ??
     property.bathrooms ??
     0;
 
+
   const squareFeet =
     property.Square_feet ??
     property.square_feet ??
     0;
+
 
   card.innerHTML = `
 
@@ -512,30 +1060,45 @@ async function renderProperty(property) {
 
 
   const editButton =
-    card.querySelector(".edit-property-btn");
-
-  const deleteButton =
-    card.querySelector(".delete-property-btn");
-
-
-  editButton.addEventListener("click", () => {
-
-    startEdit(property);
-
-  });
-
-
-  deleteButton.addEventListener("click", async () => {
-
-    await deleteProperty(
-      property,
-      deleteButton
+    card.querySelector(
+      ".edit-property-btn"
     );
 
-  });
+
+  const deleteButton =
+    card.querySelector(
+      ".delete-property-btn"
+    );
 
 
-  adminListings.appendChild(card);
+  editButton.addEventListener(
+    "click",
+    () => {
+
+      startEdit(
+        property
+      );
+
+    }
+  );
+
+
+  deleteButton.addEventListener(
+    "click",
+    async () => {
+
+      await deleteProperty(
+        property,
+        deleteButton
+      );
+
+    }
+  );
+
+
+  adminListings.appendChild(
+    card
+  );
 
 }
 
@@ -544,65 +1107,84 @@ async function renderProperty(property) {
    START EDIT
 ================================================= */
 
-function startEdit(property) {
+function startEdit(
+  property
+) {
 
-  editingPropertyId = property.id;
+  editingPropertyId =
+    property.id;
+
 
   propertyTitle.value =
     property.Title ??
     property.title ??
     "";
 
+
   propertyDescription.value =
     property.Description ??
     property.description ??
     "";
+
 
   propertyPrice.value =
     property.Price ??
     property.price ??
     "";
 
+
   propertyLocation.value =
     property.Location ??
     property.location ??
     "";
+
 
   propertyType.value =
     property.Property_type ??
     property.property_type ??
     "";
 
+
   propertyStatus.value =
     property.Status ??
     property.status ??
     "For Sale";
+
 
   propertyBedrooms.value =
     property.Bedrooms ??
     property.bedrooms ??
     "";
 
+
   propertyBathrooms.value =
     property.Bathrooms ??
     property.bathrooms ??
     "";
+
 
   propertySquareFeet.value =
     property.Square_feet ??
     property.square_feet ??
     "";
 
+
   formHeading.textContent =
     "Edit property";
+
 
   submitPropertyBtn.textContent =
     "Save changes";
 
-  cancelEditBtn.classList.remove("hidden");
+
+  cancelEditBtn.classList.remove(
+    "hidden"
+  );
+
 
   formMessage.textContent =
     "Editing this property.";
+
 
   window.scrollTo({
     top: 0,
@@ -616,205 +1198,246 @@ function startEdit(property) {
    PROPERTY FORM SUBMIT
 ================================================= */
 
-propertyForm.addEventListener("submit", async (event) => {
+propertyForm.addEventListener(
+  "submit",
+  async (event) => {
 
-  event.preventDefault();
+    event.preventDefault();
 
-  formMessage.textContent = "";
-
-  const title =
-    propertyTitle.value.trim();
-
-  const description =
-    propertyDescription.value.trim();
-
-  const price =
-    Number(propertyPrice.value);
-
-  const location =
-    propertyLocation.value.trim();
-
-  const type =
-    propertyType.value;
-
-  const status =
-    propertyStatus.value;
-
-  const bedrooms =
-    Number(propertyBedrooms.value);
-
-  const bathrooms =
-    Number(propertyBathrooms.value);
-
-  const squareFeet =
-    Number(propertySquareFeet.value);
+    formMessage.textContent = "";
 
 
-  if (
-    !title ||
-    !description ||
-    !location ||
-    !type ||
-    !status
-  ) {
-
-    formMessage.textContent =
-      "Please complete all property fields.";
-
-    return;
-  }
+    const title =
+      propertyTitle.value.trim();
 
 
-  submitPropertyBtn.disabled = true;
-
-  submitPropertyBtn.textContent =
-    editingPropertyId
-      ? "Saving..."
-      : "Publishing...";
+    const description =
+      propertyDescription.value.trim();
 
 
-  try {
-
-    let propertyId = editingPropertyId;
-
-
-    /* =================================================
-       UPDATE
-    ================================================= */
-
-    if (editingPropertyId) {
-
-      const {
-        error
-      } = await supabase
-        .from("Properties")
-        .update({
-
-          Title: title,
-          Description: description,
-          Price: price,
-          Location: location,
-          Property_type: type,
-          Status: status,
-          Bedrooms: bedrooms,
-          Bathrooms: bathrooms,
-          Square_feet: squareFeet
-
-        })
-        .eq("id", editingPropertyId);
-
-
-      if (error) {
-        throw error;
-      }
-
-
-      formMessage.textContent =
-        "Property updated successfully.";
-
-    }
-
-
-    /* =================================================
-       CREATE
-    ================================================= */
-
-    else {
-
-      const {
-        data,
-        error
-      } = await supabase
-        .from("Properties")
-        .insert({
-
-          Title: title,
-          Description: description,
-          Price: price,
-          Location: location,
-          Property_type: type,
-          Status: status,
-          Bedrooms: bedrooms,
-          Bathrooms: bathrooms,
-          Square_feet: squareFeet
-
-        })
-        .select()
-        .single();
-
-
-      if (error) {
-        throw error;
-      }
-
-
-      propertyId = data.id;
-
-      formMessage.textContent =
-        "Property published successfully.";
-
-    }
-
-
-    /* =================================================
-       PHOTO UPLOAD
-    ================================================= */
-
-    const files =
-      Array.from(
-        propertyPhotos.files || []
+    const price =
+      Number(
+        propertyPrice.value
       );
 
 
-    if (files.length > 0 && propertyId) {
+    const location =
+      propertyLocation.value.trim();
 
-      photoHelp.textContent =
-        "Uploading photos...";
 
-      await uploadPropertyPhotos(
-        propertyId,
-        files
+    const type =
+      propertyType.value;
+
+
+    const status =
+      propertyStatus.value;
+
+
+    const bedrooms =
+      Number(
+        propertyBedrooms.value
       );
 
-      photoHelp.textContent =
-        "Photos uploaded successfully.";
 
+    const bathrooms =
+      Number(
+        propertyBathrooms.value
+      );
+
+
+    const squareFeet =
+      Number(
+        propertySquareFeet.value
+      );
+
+
+    if (
+      !title ||
+      !description ||
+      !location ||
+      !type ||
+      !status
+    ) {
+
+      formMessage.textContent =
+        "Please complete all property fields.";
+
+      return;
     }
 
 
-    await loadProperties();
+    submitPropertyBtn.disabled =
+      true;
 
-    resetPropertyForm(false);
-
-    formMessage.textContent =
-      editingPropertyId
-        ? "Property updated successfully."
-        : "Property published successfully.";
-
-
-  } catch (error) {
-
-    console.error(
-      "Property save error:",
-      error
-    );
-
-    formMessage.textContent =
-      error.message ||
-      "Unable to save property.";
-
-  } finally {
-
-    submitPropertyBtn.disabled = false;
 
     submitPropertyBtn.textContent =
       editingPropertyId
-        ? "Save changes"
-        : "Publish property";
+        ? "Saving..."
+        : "Publishing...";
+
+
+    try {
+
+      let propertyId =
+        editingPropertyId;
+
+
+      /* =================================================
+         UPDATE
+      ================================================= */
+
+      if (editingPropertyId) {
+
+        const {
+          error
+        } =
+          await supabase
+            .from("Properties")
+            .update({
+
+              Title: title,
+              Description: description,
+              Price: price,
+              Location: location,
+              Property_type: type,
+              Status: status,
+              Bedrooms: bedrooms,
+              Bathrooms: bathrooms,
+              Square_feet: squareFeet
+
+            })
+            .eq(
+              "id",
+              editingPropertyId
+            );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        formMessage.textContent =
+          "Property updated successfully.";
+
+      }
+
+
+      /* =================================================
+         CREATE
+      ================================================= */
+
+      else {
+
+        const {
+          data,
+          error
+        } =
+          await supabase
+            .from("Properties")
+            .insert({
+
+              Title: title,
+              Description: description,
+              Price: price,
+              Location: location,
+              Property_type: type,
+              Status: status,
+              Bedrooms: bedrooms,
+              Bathrooms: bathrooms,
+              Square_feet: squareFeet
+
+            })
+            .select()
+            .single();
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        propertyId =
+          data.id;
+
+
+        formMessage.textContent =
+          "Property published successfully.";
+
+      }
+
+
+      /* =================================================
+         PHOTO UPLOAD
+      ================================================= */
+
+      const files =
+        Array.from(
+          propertyPhotos.files || []
+        );
+
+
+      if (
+        files.length > 0 &&
+        propertyId
+      ) {
+
+        photoHelp.textContent =
+          "Uploading photos...";
+
+
+        await uploadPropertyPhotos(
+          propertyId,
+          files
+        );
+
+
+        photoHelp.textContent =
+          "Photos uploaded successfully.";
+
+      }
+
+
+      await loadProperties();
+
+
+      resetPropertyForm(false);
+
+
+      formMessage.textContent =
+        editingPropertyId
+          ? "Property updated successfully."
+          : "Property published successfully.";
+
+
+    } catch (error) {
+
+      console.error(
+        "Property save error:",
+        error
+      );
+
+
+      formMessage.textContent =
+        error.message ||
+        "Unable to save property.";
+
+
+    } finally {
+
+      submitPropertyBtn.disabled =
+        false;
+
+
+      submitPropertyBtn.textContent =
+        editingPropertyId
+          ? "Save changes"
+          : "Publish property";
+
+    }
 
   }
-
-});
+);
 
 
 /* =================================================
@@ -826,18 +1449,23 @@ async function uploadPropertyPhotos(
   files
 ) {
 
-  for (const file of files) {
+  for (
+    const file of files
+  ) {
 
     const extension =
       file.name.includes(".")
         ? file.name.split(".").pop()
         : "jpg";
 
+
     const safeExtension =
       extension.toLowerCase();
 
+
     const fileName =
       `${crypto.randomUUID()}.${safeExtension}`;
+
 
     const filePath =
       `${propertyId}/${fileName}`;
@@ -845,15 +1473,16 @@ async function uploadPropertyPhotos(
 
     const {
       error: uploadError
-    } = await supabase.storage
-      .from("property-images")
-      .upload(
-        filePath,
-        file,
-        {
-          upsert: false
-        }
-      );
+    } =
+      await supabase.storage
+        .from("property-images")
+        .upload(
+          filePath,
+          file,
+          {
+            upsert: false
+          }
+        );
 
 
     if (uploadError) {
@@ -863,9 +1492,12 @@ async function uploadPropertyPhotos(
 
     const {
       data: publicData
-    } = supabase.storage
-      .from("property-images")
-      .getPublicUrl(filePath);
+    } =
+      supabase.storage
+        .from("property-images")
+        .getPublicUrl(
+          filePath
+        );
 
 
     const imageUrl =
@@ -873,22 +1505,28 @@ async function uploadPropertyPhotos(
 
 
     if (!imageUrl) {
+
       throw new Error(
         "Unable to create image URL."
       );
+
     }
 
 
     const {
       error: imageInsertError
-    } = await supabase
-      .from("Property _image")
-      .insert({
+    } =
+      await supabase
+        .from("Property _image")
+        .insert({
 
-        Property_id: propertyId,
-        Image_url: imageUrl
+          Property_id:
+            propertyId,
 
-      });
+          Image_url:
+            imageUrl
+
+        });
 
 
     if (imageInsertError) {
@@ -926,7 +1564,9 @@ async function deleteProperty(
   }
 
 
-  deleteButton.disabled = true;
+  deleteButton.disabled =
+    true;
+
 
   deleteButton.textContent =
     "Deleting...";
@@ -937,10 +1577,14 @@ async function deleteProperty(
     const {
       data: images,
       error: imageLoadError
-    } = await supabase
-      .from("Property _image")
-      .select("Image_url")
-      .eq("Property_id", property.id);
+    } =
+      await supabase
+        .from("Property _image")
+        .select("Image_url")
+        .eq(
+          "Property_id",
+          property.id
+        );
 
 
     if (imageLoadError) {
@@ -948,16 +1592,16 @@ async function deleteProperty(
     }
 
 
-    /* =================================================
-       DELETE IMAGE RECORDS
-    ================================================= */
-
     const {
       error: imageDeleteError
-    } = await supabase
-      .from("Property _image")
-      .delete()
-      .eq("Property_id", property.id);
+    } =
+      await supabase
+        .from("Property _image")
+        .delete()
+        .eq(
+          "Property_id",
+          property.id
+        );
 
 
     if (imageDeleteError) {
@@ -965,17 +1609,16 @@ async function deleteProperty(
     }
 
 
-    /* =================================================
-       DELETE STORAGE FILES
-    ================================================= */
-
     const storagePaths = [];
 
 
-    for (const image of images || []) {
+    for (
+      const image of images || []
+    ) {
 
       const url =
         image.Image_url;
+
 
       if (!url) continue;
 
@@ -993,46 +1636,57 @@ async function deleteProperty(
         const path =
           decodeURIComponent(
             url.substring(
-              index + marker.length
+              index +
+              marker.length
             )
           );
 
-        storagePaths.push(path);
+
+        storagePaths.push(
+          path
+        );
 
       }
 
     }
 
 
-    if (storagePaths.length > 0) {
+    if (
+      storagePaths.length > 0
+    ) {
 
       const {
         error: storageDeleteError
-      } = await supabase.storage
-        .from("property-images")
-        .remove(storagePaths);
+      } =
+        await supabase.storage
+          .from("property-images")
+          .remove(
+            storagePaths
+          );
 
 
       if (storageDeleteError) {
+
         console.warn(
           "Storage cleanup warning:",
           storageDeleteError
         );
+
       }
 
     }
 
 
-    /* =================================================
-       DELETE PROPERTY
-    ================================================= */
-
     const {
       error: propertyDeleteError
-    } = await supabase
-      .from("Properties")
-      .delete()
-      .eq("id", property.id);
+    } =
+      await supabase
+        .from("Properties")
+        .delete()
+        .eq(
+          "id",
+          property.id
+        );
 
 
     if (propertyDeleteError) {
@@ -1042,6 +1696,7 @@ async function deleteProperty(
 
     await loadProperties();
 
+
   } catch (error) {
 
     console.error(
@@ -1049,12 +1704,16 @@ async function deleteProperty(
       error
     );
 
+
     alert(
       error.message ||
       "Unable to delete property."
     );
 
-    deleteButton.disabled = false;
+
+    deleteButton.disabled =
+      false;
+
 
     deleteButton.textContent =
       "Delete";
@@ -1086,30 +1745,43 @@ function resetPropertyForm(
   clearMessage = true
 ) {
 
-  editingPropertyId = null;
+  editingPropertyId =
+    null;
+
 
   propertyForm.reset();
+
 
   propertyStatus.value =
     "For Sale";
 
+
   formHeading.textContent =
     "Add a property";
 
+
   submitPropertyBtn.textContent =
     "Publish property";
+
 
   cancelEditBtn.classList.add(
     "hidden"
   );
 
-  propertyPhotos.value = "";
+
+  propertyPhotos.value =
+    "";
+
 
   photoHelp.textContent =
     "Select one or more photos for this property.";
 
+
   if (clearMessage) {
-    formMessage.textContent = "";
+
+    formMessage.textContent =
+      "";
+
   }
 
 }
@@ -1136,12 +1808,16 @@ async function loadInquiries() {
   const {
     data,
     error
-  } = await supabase
-    .from("Inquiries")
-    .select("*")
-    .order("created_at", {
-      ascending: false
-    });
+  } =
+    await supabase
+      .from("Inquiries")
+      .select("*")
+      .order(
+        "created_at",
+        {
+          ascending: false
+        }
+      );
 
 
   if (error) {
@@ -1151,63 +1827,95 @@ async function loadInquiries() {
       error
     );
 
+
     adminInquiries.innerHTML =
       `<p class="admin-error">Unable to load inquiries.</p>`;
 
-    updateInquiryStats([]);
 
     return;
   }
 
 
-  updateInquiryStats(data || []);
+  const inquiries =
+    data || [];
 
 
-  if (!data || data.length === 0) {
-
-    adminInquiries.innerHTML =
-      `<p class="admin-empty">No customer inquiries yet.</p>`;
-
-    return;
-  }
-
-
-  adminInquiries.innerHTML = "";
-
-
-  data.forEach(
-    inquiry => renderInquiry(inquiry)
+  updateInquiryOverview(
+    inquiries
   );
 
-}
+
+  updateInquiryFilterUI();
 
 
-/* =================================================
-   DASHBOARD INQUIRY STATS
-================================================= */
-
-function updateInquiryStats(inquiries) {
-
-  const newInquiries =
-    inquiries.filter(inquiry => {
-
-      const status =
-        String(
-          inquiry.status ||
-          "New"
-        ).trim().toLowerCase();
-
-      return status === "new";
-
-    }).length;
+  let filteredInquiries =
+    inquiries;
 
 
-  if (statNewInquiries) {
+  if (
+    currentInquiryFilter !==
+    "all"
+  ) {
 
-    statNewInquiries.textContent =
-      String(newInquiries);
+    filteredInquiries =
+      inquiries.filter(
+        inquiry => {
+
+          const status =
+            String(
+              inquiry.status ||
+              "New"
+            )
+              .trim()
+              .toLowerCase();
+
+
+          return (
+            status ===
+            currentInquiryFilter
+          );
+
+        }
+      );
 
   }
+
+
+  if (
+    filteredInquiries.length === 0
+  ) {
+
+    if (
+      inquiries.length === 0
+    ) {
+
+      adminInquiries.innerHTML =
+        `<p class="admin-empty">No customer inquiries yet.</p>`;
+
+    } else {
+
+      adminInquiries.innerHTML =
+        `<p class="admin-empty">No inquiries match this filter.</p>`;
+
+    }
+
+    return;
+  }
+
+
+  adminInquiries.innerHTML =
+    "";
+
+
+  filteredInquiries.forEach(
+    inquiry => {
+
+      renderInquiry(
+        inquiry
+      );
+
+    }
+  );
 
 }
 
@@ -1216,10 +1924,15 @@ function updateInquiryStats(inquiries) {
    RENDER INQUIRY
 ================================================= */
 
-function renderInquiry(inquiry) {
+function renderInquiry(
+  inquiry
+) {
 
   const card =
-    document.createElement("article");
+    document.createElement(
+      "article"
+    );
+
 
   card.className =
     "admin-inquiry-card";
@@ -1262,12 +1975,15 @@ function renderInquiry(inquiry) {
 
         <h3>
           ${escapeHtml(
-            inquiry.name || "Unknown customer"
+            inquiry.name ||
+            "Unknown customer"
           )}
         </h3>
 
         <div class="admin-inquiry-date">
-          ${escapeHtml(createdAt)}
+          ${escapeHtml(
+            createdAt
+          )}
         </div>
 
       </div>
@@ -1280,20 +1996,35 @@ function renderInquiry(inquiry) {
           aria-label="Inquiry status"
         >
 
-          <option value="New"
-            ${status === "New" ? "selected" : ""}
+          <option
+            value="New"
+            ${
+              status === "New"
+                ? "selected"
+                : ""
+            }
           >
             New
           </option>
 
-          <option value="Contacted"
-            ${status === "Contacted" ? "selected" : ""}
+          <option
+            value="Contacted"
+            ${
+              status === "Contacted"
+                ? "selected"
+                : ""
+            }
           >
             Contacted
           </option>
 
-          <option value="Closed"
-            ${status === "Closed" ? "selected" : ""}
+          <option
+            value="Closed"
+            ${
+              status === "Closed"
+                ? "selected"
+                : ""
+            }
           >
             Closed
           </option>
@@ -1313,7 +2044,8 @@ function renderInquiry(inquiry) {
 
         <span>
           ${escapeHtml(
-            inquiry.email || "—"
+            inquiry.email ||
+            "—"
           )}
         </span>
 
@@ -1326,7 +2058,8 @@ function renderInquiry(inquiry) {
 
         <span>
           ${escapeHtml(
-            inquiry.phone || "—"
+            inquiry.phone ||
+            "—"
           )}
         </span>
 
@@ -1356,7 +2089,9 @@ function renderInquiry(inquiry) {
             <strong>Location</strong>
 
             <span>
-              ${escapeHtml(propertyLocation)}
+              ${escapeHtml(
+                propertyLocation
+              )}
             </span>
 
           </div>
@@ -1368,7 +2103,8 @@ function renderInquiry(inquiry) {
     <div class="admin-inquiry-message">
 
       ${escapeHtml(
-        inquiry.message || ""
+        inquiry.message ||
+        ""
       )}
 
     </div>
@@ -1410,8 +2146,6 @@ function renderInquiry(inquiry) {
         statusSelect
       );
 
-      await loadInquiries();
-
     }
   );
 
@@ -1429,7 +2163,9 @@ function renderInquiry(inquiry) {
   );
 
 
-  adminInquiries.appendChild(card);
+  adminInquiries.appendChild(
+    card
+  );
 
 }
 
@@ -1444,17 +2180,22 @@ async function updateInquiryStatus(
   select
 ) {
 
-  select.disabled = true;
+  select.disabled =
+    true;
 
 
   const {
     error
-  } = await supabase
-    .from("Inquiries")
-    .update({
-      status: newStatus
-    })
-    .eq("id", inquiryId);
+  } =
+    await supabase
+      .from("Inquiries")
+      .update({
+        status: newStatus
+      })
+      .eq(
+        "id",
+        inquiryId
+      );
 
 
   if (error) {
@@ -1464,15 +2205,27 @@ async function updateInquiryStatus(
       error
     );
 
+
     alert(
       error.message ||
       "Unable to update inquiry status."
     );
 
+
+    select.disabled =
+      false;
+
+
+    return;
   }
 
 
-  select.disabled = false;
+  select.disabled =
+    false;
+
+
+  /* Refresh counts and keep current filter */
+  await loadInquiries();
 
 }
 
@@ -1497,7 +2250,9 @@ async function deleteInquiry(
   }
 
 
-  deleteButton.disabled = true;
+  deleteButton.disabled =
+    true;
+
 
   deleteButton.textContent =
     "Deleting...";
@@ -1505,10 +2260,14 @@ async function deleteInquiry(
 
   const {
     error
-  } = await supabase
-    .from("Inquiries")
-    .delete()
-    .eq("id", inquiry.id);
+  } =
+    await supabase
+      .from("Inquiries")
+      .delete()
+      .eq(
+        "id",
+        inquiry.id
+      );
 
 
   if (error) {
@@ -1518,15 +2277,20 @@ async function deleteInquiry(
       error
     );
 
+
     alert(
       error.message ||
       "Unable to delete inquiry."
     );
 
-    deleteButton.disabled = false;
+
+    deleteButton.disabled =
+      false;
+
 
     deleteButton.textContent =
       "Delete inquiry";
+
 
     return;
   }
@@ -1547,14 +2311,20 @@ if (refreshInquiriesBtn) {
     "click",
     async () => {
 
-      refreshInquiriesBtn.disabled = true;
+      refreshInquiriesBtn.disabled =
+        true;
+
 
       refreshInquiriesBtn.textContent =
         "Refreshing...";
 
+
       await loadInquiries();
 
-      refreshInquiriesBtn.disabled = false;
+
+      refreshInquiriesBtn.disabled =
+        false;
+
 
       refreshInquiriesBtn.textContent =
         "Refresh";
@@ -1569,10 +2339,13 @@ if (refreshInquiriesBtn) {
    HELPERS
 ================================================= */
 
-function formatPrice(value) {
+function formatPrice(
+  value
+) {
 
   const number =
     Number(value) || 0;
+
 
   return new Intl.NumberFormat(
     "en-US",
@@ -1586,14 +2359,33 @@ function formatPrice(value) {
 }
 
 
-function escapeHtml(value) {
+function escapeHtml(
+  value
+) {
 
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  return String(
+    value ?? ""
+  )
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 
 }
 
@@ -1607,15 +2399,20 @@ async function startApp() {
   const connected =
     await initializeSupabase();
 
+
   if (!connected) {
     return;
   }
+
 
   await checkSession();
 
 
   supabase.auth.onAuthStateChange(
-    async (event, session) => {
+    async (
+      event,
+      session
+    ) => {
 
       if (
         event === "SIGNED_IN" &&
@@ -1630,7 +2427,9 @@ async function startApp() {
       }
 
 
-      if (event === "SIGNED_OUT") {
+      if (
+        event === "SIGNED_OUT"
+      ) {
 
         showLogin();
 
