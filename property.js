@@ -845,20 +845,247 @@ if (inquiryFormEl) {
 
   inquiryFormEl.addEventListener(
     "submit",
-    event => {
+    async event => {
 
       event.preventDefault();
 
 
-      if (formMessageEl) {
+      if (!currentProperty) {
 
-        formMessageEl.textContent =
-          "Thanks — your inquiry has been received. We'll follow up with you about this property.";
+        if (formMessageEl) {
 
+          formMessageEl.textContent =
+            "Please wait for the property information to finish loading.";
+
+        }
+
+        return;
       }
 
 
-      inquiryFormEl.reset();
+      const submitButton =
+        inquiryFormEl.querySelector(
+          'button[type="submit"]'
+        );
+
+
+      const formData =
+        new FormData(
+          inquiryFormEl
+        );
+
+
+      const name =
+        String(
+          formData.get("name") || ""
+        ).trim();
+
+
+      const email =
+        String(
+          formData.get("email") || ""
+        ).trim();
+
+
+      const phone =
+        String(
+          formData.get("phone") || ""
+        ).trim();
+
+
+      const message =
+        String(
+          formData.get("message") || ""
+        ).trim();
+
+
+      if (
+        !name ||
+        !email ||
+        !message
+      ) {
+
+        if (formMessageEl) {
+
+          formMessageEl.textContent =
+            "Please complete your name, email and message.";
+
+        }
+
+        return;
+      }
+
+
+      try {
+
+        if (submitButton) {
+
+          submitButton.disabled =
+            true;
+
+          submitButton.textContent =
+            "Sending...";
+
+        }
+
+
+        if (formMessageEl) {
+
+          formMessageEl.textContent =
+            "";
+
+        }
+
+
+        /* =========================
+           GET SUPABASE CONFIG
+        ========================== */
+
+        const configResponse =
+          await fetch(
+            "/api/config",
+            {
+              method: "GET",
+              headers: {
+                Accept:
+                  "application/json"
+              },
+              cache: "no-store"
+            }
+          );
+
+
+        if (!configResponse.ok) {
+
+          throw new Error(
+            "Unable to connect to the inquiry service."
+          );
+        }
+
+
+        const config =
+          await configResponse.json();
+
+
+        if (
+          !config.url ||
+          !config.key
+        ) {
+
+          throw new Error(
+            "Supabase configuration is missing."
+          );
+        }
+
+
+        /* =========================
+           SAVE INQUIRY
+        ========================== */
+
+        const inquiryResponse =
+          await fetch(
+            `${config.url}/rest/v1/Inquiries`,
+            {
+              method: "POST",
+
+              headers: {
+                apikey: config.key,
+                Authorization:
+                  `Bearer ${config.key}`,
+                "Content-Type":
+                  "application/json",
+                Prefer:
+                  "return=minimal"
+              },
+
+              body:
+                JSON.stringify({
+                  name,
+                  email,
+                  phone,
+
+                  message,
+
+                  property_id:
+                    currentProperty.id,
+
+                  property_title:
+                    currentProperty.Title ??
+                    currentProperty.title ??
+                    "Property",
+
+                  property_location:
+                    currentProperty.Location ??
+                    currentProperty.location ??
+                    "",
+
+                  status:
+                    "New"
+                })
+            }
+          );
+
+
+        if (!inquiryResponse.ok) {
+
+          const errorText =
+            await inquiryResponse.text();
+
+          console.error(
+            "Inquiry submission error:",
+            errorText
+          );
+
+          throw new Error(
+            "Your inquiry could not be submitted."
+          );
+        }
+
+
+        /* =========================
+           SUCCESS
+        ========================== */
+
+        if (formMessageEl) {
+
+          formMessageEl.textContent =
+            "Thanks — your inquiry has been sent. Pixiun Realty will follow up with you about this property.";
+
+        }
+
+
+        inquiryFormEl.reset();
+
+
+      } catch (error) {
+
+        console.error(
+          "Inquiry error:",
+          error
+        );
+
+
+        if (formMessageEl) {
+
+          formMessageEl.textContent =
+            "We couldn't send your inquiry right now. Please try again.";
+
+        }
+
+
+      } finally {
+
+        if (submitButton) {
+
+          submitButton.disabled =
+            false;
+
+          submitButton.textContent =
+            "Send Inquiry";
+
+        }
+
+      }
 
     }
   );
