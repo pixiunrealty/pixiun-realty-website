@@ -265,7 +265,7 @@ function renderGallery() {
 
 
   /* =========================
-     PHOTO COUNTER
+     PHOTO COUNTER + ARROWS
   ========================== */
 
   if (propertyImages.length > 1) {
@@ -283,10 +283,6 @@ function renderGallery() {
       counter
     );
 
-
-    /* =========================
-       PREVIOUS BUTTON
-    ========================== */
 
     const previous =
       document.createElement("button");
@@ -316,10 +312,6 @@ function renderGallery() {
     );
 
 
-    /* =========================
-       NEXT BUTTON
-    ========================== */
-
     const next =
       document.createElement("button");
 
@@ -346,7 +338,6 @@ function renderGallery() {
     galleryFrame.appendChild(
       next
     );
-
   }
 
 
@@ -938,64 +929,21 @@ if (inquiryFormEl) {
 
 
         /* =========================
-           GET SUPABASE CONFIG
-        ========================== */
-
-        const configResponse =
-          await fetch(
-            "/api/config",
-            {
-              method: "GET",
-              headers: {
-                Accept:
-                  "application/json"
-              },
-              cache: "no-store"
-            }
-          );
-
-
-        if (!configResponse.ok) {
-
-          throw new Error(
-            "Unable to connect to the inquiry service."
-          );
-        }
-
-
-        const config =
-          await configResponse.json();
-
-
-        if (
-          !config.url ||
-          !config.key
-        ) {
-
-          throw new Error(
-            "Supabase configuration is missing."
-          );
-        }
-
-
-        /* =========================
-           SAVE INQUIRY
+           SEND TO INQUIRY API
         ========================== */
 
         const inquiryResponse =
           await fetch(
-            `${config.url}/rest/v1/Inquiries`,
+            "/api/inquiries",
             {
               method: "POST",
 
               headers: {
-                apikey: config.key,
-                Authorization:
-                  `Bearer ${config.key}`,
-                "Content-Type":
+                Accept:
                   "application/json",
-                Prefer:
-                  "return=minimal"
+
+                "Content-Type":
+                  "application/json"
               },
 
               body:
@@ -1003,7 +951,6 @@ if (inquiryFormEl) {
                   name,
                   email,
                   phone,
-
                   message,
 
                   property_id:
@@ -1017,26 +964,30 @@ if (inquiryFormEl) {
                   property_location:
                     currentProperty.Location ??
                     currentProperty.location ??
-                    "",
-
-                  status:
-                    "New"
+                    ""
                 })
             }
           );
 
 
+        let result = {};
+
+        try {
+
+          result =
+            await inquiryResponse.json();
+
+        } catch {
+
+          result = {};
+
+        }
+
+
         if (!inquiryResponse.ok) {
 
-          const errorText =
-            await inquiryResponse.text();
-
-          console.error(
-            "Inquiry submission error:",
-            errorText
-          );
-
           throw new Error(
+            result.error ||
             "Your inquiry could not be submitted."
           );
         }
@@ -1060,7 +1011,7 @@ if (inquiryFormEl) {
       } catch (error) {
 
         console.error(
-          "Inquiry error:",
+          "Inquiry submission error:",
           error
         );
 
@@ -1068,6 +1019,7 @@ if (inquiryFormEl) {
         if (formMessageEl) {
 
           formMessageEl.textContent =
+            error.message ||
             "We couldn't send your inquiry right now. Please try again.";
 
         }
