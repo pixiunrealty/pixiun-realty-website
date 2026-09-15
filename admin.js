@@ -47,6 +47,23 @@ const refreshInquiriesBtn = document.getElementById("refreshInquiriesBtn");
 
 
 /* =================================================
+   DASHBOARD STAT ELEMENTS
+================================================= */
+
+const statTotalProperties =
+  document.getElementById("statTotalProperties");
+
+const statForSale =
+  document.getElementById("statForSale");
+
+const statForRent =
+  document.getElementById("statForRent");
+
+const statNewInquiries =
+  document.getElementById("statNewInquiries");
+
+
+/* =================================================
    SUPABASE INITIALIZATION
 ================================================= */
 
@@ -252,8 +269,12 @@ async function loadProperties() {
     adminListings.innerHTML =
       `<p class="admin-error">Unable to load properties.</p>`;
 
+    updatePropertyStats([]);
+
     return;
   }
+
+  updatePropertyStats(data || []);
 
   if (!data || data.length === 0) {
 
@@ -269,6 +290,62 @@ async function loadProperties() {
 
     await renderProperty(property);
 
+  }
+
+}
+
+
+/* =================================================
+   DASHBOARD PROPERTY STATS
+================================================= */
+
+function updatePropertyStats(properties) {
+
+  const total =
+    properties.length;
+
+  const forSale =
+    properties.filter(property => {
+
+      const status =
+        String(
+          property.Status ??
+          property.status ??
+          ""
+        ).trim().toLowerCase();
+
+      return status === "for sale";
+
+    }).length;
+
+  const forRent =
+    properties.filter(property => {
+
+      const status =
+        String(
+          property.Status ??
+          property.status ??
+          ""
+        ).trim().toLowerCase();
+
+      return status === "for rent";
+
+    }).length;
+
+
+  if (statTotalProperties) {
+    statTotalProperties.textContent =
+      String(total);
+  }
+
+  if (statForSale) {
+    statForSale.textContent =
+      String(forSale);
+  }
+
+  if (statForRent) {
+    statForRent.textContent =
+      String(forRent);
   }
 
 }
@@ -1077,8 +1154,13 @@ async function loadInquiries() {
     adminInquiries.innerHTML =
       `<p class="admin-error">Unable to load inquiries.</p>`;
 
+    updateInquiryStats([]);
+
     return;
   }
+
+
+  updateInquiryStats(data || []);
 
 
   if (!data || data.length === 0) {
@@ -1096,6 +1178,36 @@ async function loadInquiries() {
   data.forEach(
     inquiry => renderInquiry(inquiry)
   );
+
+}
+
+
+/* =================================================
+   DASHBOARD INQUIRY STATS
+================================================= */
+
+function updateInquiryStats(inquiries) {
+
+  const newInquiries =
+    inquiries.filter(inquiry => {
+
+      const status =
+        String(
+          inquiry.status ||
+          "New"
+        ).trim().toLowerCase();
+
+      return status === "new";
+
+    }).length;
+
+
+  if (statNewInquiries) {
+
+    statNewInquiries.textContent =
+      String(newInquiries);
+
+  }
 
 }
 
@@ -1297,6 +1409,8 @@ function renderInquiry(inquiry) {
         statusSelect.value,
         statusSelect
       );
+
+      await loadInquiries();
 
     }
   );
