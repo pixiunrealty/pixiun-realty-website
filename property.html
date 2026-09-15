@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
 
   <title>Property | Pixiun Realty LLC</title>
 
@@ -11,14 +14,20 @@
     content="View property details with Pixiun Realty LLC."
   >
 
-  <link rel="stylesheet" href="style.css">
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
 </head>
 
 <body>
 
 <header class="site-header">
 
-  <a class="brand" href="index.html">
+  <a
+    class="brand"
+    href="index.html"
+  >
     <span class="brand-mark">P</span>
 
     <span>
@@ -33,12 +42,22 @@
     <a href="index.html#sell">Sell</a>
     <a href="index.html#rent">Rent</a>
     <a href="index.html#about">About</a>
-    <a class="nav-cta" href="index.html#contact">
+
+    <a
+      class="nav-cta"
+      href="index.html#contact"
+    >
       Contact
     </a>
   </nav>
 
-  <button class="menu-btn">☰</button>
+  <button
+    class="menu-btn"
+    type="button"
+    aria-label="Open menu"
+  >
+    ☰
+  </button>
 
 </header>
 
@@ -55,10 +74,21 @@
     </a>
 
 
-    <div id="propertyLoading" class="property-loading">
+    <!-- =========================
+         LOADING
+    ========================== -->
+
+    <div
+      id="propertyLoading"
+      class="property-loading"
+    >
       Loading property...
     </div>
 
+
+    <!-- =========================
+         ERROR
+    ========================== -->
 
     <div
       id="propertyError"
@@ -68,10 +98,18 @@
     </div>
 
 
+    <!-- =========================
+         PROPERTY CONTENT
+    ========================== -->
+
     <div
       id="propertyContent"
       class="hidden"
     >
+
+      <!-- =========================
+           GALLERY
+      ========================== -->
 
       <div
         id="propertyGallery"
@@ -79,29 +117,50 @@
       ></div>
 
 
+      <!-- =========================
+           PROPERTY HEADER
+      ========================== -->
+
       <div class="property-detail-grid">
 
         <div>
 
-          <span
-            id="propertyStatus"
-            class="status"
-          ></span>
+          <div class="property-detail-meta">
+
+            <span
+              id="propertyStatus"
+              class="status"
+            ></span>
+
+            <span
+              id="propertyType"
+              class="property-detail-type"
+            ></span>
+
+          </div>
+
 
           <h1
             id="propertyTitle"
             class="property-detail-title"
           ></h1>
 
+
           <p
             id="propertyLocation"
             class="property-detail-location"
           ></p>
 
+
           <div
             id="propertyStats"
             class="property-detail-stats"
           ></div>
+
+
+          <!-- =========================
+               DESCRIPTION
+          ========================== -->
 
           <div class="property-description">
 
@@ -120,7 +179,15 @@
         </div>
 
 
+        <!-- =========================
+             CONTACT CARD
+        ========================== -->
+
         <aside class="property-contact-card">
+
+          <p class="property-card-label">
+            LISTED AT
+          </p>
 
           <div
             id="propertyPrice"
@@ -129,7 +196,11 @@
 
           <p>
             Interested in this property?
+            Get in touch with Pixiun Realty
+            for more information or to arrange
+            a viewing.
           </p>
+
 
           <a
             id="propertyInquiryButton"
@@ -139,10 +210,23 @@
             Request Information
           </a>
 
+
+          <a
+            class="property-tour-button"
+            href="#propertyInquiry"
+          >
+            Schedule a Tour
+            <span>→</span>
+          </a>
+
         </aside>
 
       </div>
 
+
+      <!-- =========================
+           INQUIRY
+      ========================== -->
 
       <section
         id="propertyInquiry"
@@ -156,23 +240,42 @@
           </p>
 
           <h2>
-            Interested in this property?
+            Let's talk about this property.
           </h2>
 
           <p>
-            Send us your information and
-            Pixiun Realty can follow up with
-            you about this listing.
+            Tell Pixiun Realty what you're
+            looking for and how you'd like
+            to view this property.
           </p>
+
+          <div class="inquiry-points">
+
+            <span>
+              ✓ Property information
+            </span>
+
+            <span>
+              ✓ Viewing requests
+            </span>
+
+            <span>
+              ✓ Buying or renting questions
+            </span>
+
+          </div>
 
         </div>
 
 
-        <form id="propertyInquiryForm">
+        <form
+          id="propertyInquiryForm"
+        >
 
           <input
             name="name"
             placeholder="Your name"
+            autocomplete="name"
             required
           >
 
@@ -180,12 +283,14 @@
             name="email"
             type="email"
             placeholder="Email address"
+            autocomplete="email"
             required
           >
 
           <input
             name="phone"
             placeholder="Phone number"
+            autocomplete="tel"
           >
 
           <textarea
