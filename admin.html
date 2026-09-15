@@ -10,6 +10,47 @@
 
   <style>
     /* =================================================
+       DASHBOARD OVERVIEW
+    ================================================= */
+
+    .admin-overview {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin: 28px 0 36px;
+    }
+
+    .admin-stat-card {
+      border: 1px solid rgba(0,0,0,.09);
+      border-radius: 16px;
+      padding: 20px;
+      background: #fff;
+    }
+
+    .admin-stat-label {
+      margin: 0 0 8px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      opacity: .55;
+    }
+
+    .admin-stat-value {
+      margin: 0;
+      font-size: 32px;
+      line-height: 1;
+      font-weight: 700;
+    }
+
+    .admin-stat-note {
+      margin: 9px 0 0;
+      font-size: 13px;
+      opacity: .6;
+    }
+
+
+    /* =================================================
        INQUIRIES
     ================================================= */
 
@@ -148,7 +189,35 @@
       color: #a00;
     }
 
+
+    /* =================================================
+       MOBILE
+    ================================================= */
+
+    @media (max-width: 900px) {
+
+      .admin-overview {
+        grid-template-columns: repeat(2, minmax(0,1fr));
+      }
+
+    }
+
+
     @media (max-width: 700px) {
+
+      .admin-overview {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .admin-stat-card {
+        padding: 16px;
+      }
+
+      .admin-stat-value {
+        font-size: 27px;
+      }
+
       .admin-section-head {
         flex-direction: column;
       }
@@ -168,7 +237,18 @@
       .admin-inquiry-contact {
         grid-template-columns: 1fr;
       }
+
     }
+
+
+    @media (max-width: 420px) {
+
+      .admin-overview {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
   </style>
 </head>
 
@@ -262,6 +342,94 @@
       >
         Sign out
       </button>
+
+    </div>
+
+
+    <!-- =================================================
+         DASHBOARD OVERVIEW
+    ================================================== -->
+
+    <div class="admin-overview">
+
+      <div class="admin-stat-card">
+
+        <p class="admin-stat-label">
+          Total Properties
+        </p>
+
+        <p
+          id="statTotalProperties"
+          class="admin-stat-value"
+        >
+          —
+        </p>
+
+        <p class="admin-stat-note">
+          All listings
+        </p>
+
+      </div>
+
+
+      <div class="admin-stat-card">
+
+        <p class="admin-stat-label">
+          For Sale
+        </p>
+
+        <p
+          id="statForSale"
+          class="admin-stat-value"
+        >
+          —
+        </p>
+
+        <p class="admin-stat-note">
+          Active sale listings
+        </p>
+
+      </div>
+
+
+      <div class="admin-stat-card">
+
+        <p class="admin-stat-label">
+          For Rent
+        </p>
+
+        <p
+          id="statForRent"
+          class="admin-stat-value"
+        >
+          —
+        </p>
+
+        <p class="admin-stat-note">
+          Active rental listings
+        </p>
+
+      </div>
+
+
+      <div class="admin-stat-card">
+
+        <p class="admin-stat-label">
+          New Inquiries
+        </p>
+
+        <p
+          id="statNewInquiries"
+          class="admin-stat-value"
+        >
+          —
+        </p>
+
+        <p class="admin-stat-note">
+          Need your attention
+        </p>
+
+      </div>
 
     </div>
 
@@ -480,7 +648,7 @@
 
 <script
   type="module"
-  src="admin.js?v=9"
+  src="admin.js?v=10"
 ></script>
 
 </body>
