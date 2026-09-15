@@ -10,14 +10,14 @@
 
   <style>
     /* =================================================
-       DASHBOARD OVERVIEW
+       ADMIN OVERVIEW
     ================================================= */
 
     .admin-overview {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 14px;
-      margin: 28px 0 36px;
+      margin: 28px 0 40px;
     }
 
     .admin-stat-card {
@@ -25,28 +25,83 @@
       border-radius: 16px;
       padding: 20px;
       background: #fff;
+      text-align: left;
+      cursor: pointer;
+      transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        border-color .18s ease;
+      font: inherit;
+      color: inherit;
+      width: 100%;
+    }
+
+    .admin-stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(0,0,0,.07);
+      border-color: rgba(0,0,0,.16);
+    }
+
+    .admin-stat-card:active {
+      transform: translateY(0);
     }
 
     .admin-stat-label {
-      margin: 0 0 8px;
+      display: block;
       font-size: 12px;
       font-weight: 600;
       letter-spacing: .06em;
       text-transform: uppercase;
       opacity: .55;
+      margin-bottom: 8px;
     }
 
-    .admin-stat-value {
-      margin: 0;
-      font-size: 32px;
+    .admin-stat-count {
+      display: block;
+      font-size: 30px;
       line-height: 1;
       font-weight: 700;
+      margin-bottom: 10px;
     }
 
-    .admin-stat-note {
-      margin: 9px 0 0;
+    .admin-stat-action {
+      display: block;
       font-size: 13px;
-      opacity: .6;
+      opacity: .55;
+    }
+
+    .admin-stat-card.attention {
+      border-color: rgba(160,0,0,.18);
+    }
+
+
+    /* =================================================
+       FILTER BAR
+    ================================================= */
+
+    .admin-filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0 0 22px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #f7f7f7;
+    }
+
+    .admin-filter-label {
+      font-size: 14px;
+      opacity: .7;
+    }
+
+    .admin-filter-clear {
+      border: 1px solid rgba(0,0,0,.12);
+      background: #fff;
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font: inherit;
     }
 
 
@@ -197,11 +252,10 @@
     @media (max-width: 900px) {
 
       .admin-overview {
-        grid-template-columns: repeat(2, minmax(0,1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
     }
-
 
     @media (max-width: 700px) {
 
@@ -214,8 +268,8 @@
         padding: 16px;
       }
 
-      .admin-stat-value {
-        font-size: 27px;
+      .admin-stat-count {
+        font-size: 26px;
       }
 
       .admin-section-head {
@@ -238,17 +292,12 @@
         grid-template-columns: 1fr;
       }
 
-    }
-
-
-    @media (max-width: 420px) {
-
-      .admin-overview {
-        grid-template-columns: 1fr;
+      .admin-filter-bar {
+        align-items: flex-start;
+        flex-direction: column;
       }
 
     }
-
   </style>
 </head>
 
@@ -347,89 +396,163 @@
 
 
     <!-- =================================================
-         DASHBOARD OVERVIEW
+         CLICKABLE DASHBOARD OVERVIEW
     ================================================== -->
 
     <div class="admin-overview">
 
-      <div class="admin-stat-card">
-
-        <p class="admin-stat-label">
+      <button
+        class="admin-stat-card"
+        id="totalPropertiesCard"
+        type="button"
+      >
+        <span class="admin-stat-label">
           Total Properties
-        </p>
+        </span>
 
-        <p
-          id="statTotalProperties"
-          class="admin-stat-value"
+        <span
+          class="admin-stat-count"
+          id="totalPropertiesCount"
         >
-          —
-        </p>
+          0
+        </span>
 
-        <p class="admin-stat-note">
-          All listings
-        </p>
+        <span class="admin-stat-action">
+          View all properties →
+        </span>
+      </button>
 
-      </div>
 
-
-      <div class="admin-stat-card">
-
-        <p class="admin-stat-label">
+      <button
+        class="admin-stat-card"
+        id="forSaleCard"
+        type="button"
+      >
+        <span class="admin-stat-label">
           For Sale
-        </p>
+        </span>
 
-        <p
-          id="statForSale"
-          class="admin-stat-value"
+        <span
+          class="admin-stat-count"
+          id="forSaleCount"
         >
-          —
-        </p>
+          0
+        </span>
 
-        <p class="admin-stat-note">
-          Active sale listings
-        </p>
+        <span class="admin-stat-action">
+          View properties →
+        </span>
+      </button>
 
-      </div>
 
-
-      <div class="admin-stat-card">
-
-        <p class="admin-stat-label">
+      <button
+        class="admin-stat-card"
+        id="forRentCard"
+        type="button"
+      >
+        <span class="admin-stat-label">
           For Rent
-        </p>
+        </span>
 
-        <p
-          id="statForRent"
-          class="admin-stat-value"
+        <span
+          class="admin-stat-count"
+          id="forRentCount"
         >
-          —
-        </p>
+          0
+        </span>
 
-        <p class="admin-stat-note">
-          Active rental listings
-        </p>
+        <span class="admin-stat-action">
+          View properties →
+        </span>
+      </button>
 
-      </div>
+
+      <button
+        class="admin-stat-card"
+        id="totalInquiriesCard"
+        type="button"
+      >
+        <span class="admin-stat-label">
+          Total Inquiries
+        </span>
+
+        <span
+          class="admin-stat-count"
+          id="totalInquiriesCount"
+        >
+          0
+        </span>
+
+        <span class="admin-stat-action">
+          View inquiries →
+        </span>
+      </button>
 
 
-      <div class="admin-stat-card">
-
-        <p class="admin-stat-label">
+      <button
+        class="admin-stat-card attention"
+        id="newInquiriesCard"
+        type="button"
+      >
+        <span class="admin-stat-label">
           New Inquiries
-        </p>
+        </span>
 
-        <p
-          id="statNewInquiries"
-          class="admin-stat-value"
+        <span
+          class="admin-stat-count"
+          id="newInquiriesCount"
         >
-          —
-        </p>
+          0
+        </span>
 
-        <p class="admin-stat-note">
-          Need your attention
-        </p>
+        <span class="admin-stat-action">
+          Needs attention →
+        </span>
+      </button>
 
-      </div>
+
+      <button
+        class="admin-stat-card"
+        id="contactedInquiriesCard"
+        type="button"
+      >
+        <span class="admin-stat-label">
+          Contacted
+        </span>
+
+        <span
+          class="admin-stat-count"
+          id="contactedInquiriesCount"
+        >
+          0
+        </span>
+
+        <span class="admin-stat-action">
+          View contacted →
+        </span>
+      </button>
+
+
+      <button
+        class="admin-stat-card"
+        id="closedInquiriesCard"
+        type="button"
+      >
+        <span class="admin-stat-label">
+          Closed
+        </span>
+
+        <span
+          class="admin-stat-count"
+          id="closedInquiriesCount"
+        >
+          0
+        </span>
+
+        <span class="admin-stat-action">
+          View closed →
+        </span>
+      </button>
 
     </div>
 
@@ -594,14 +717,59 @@
          LISTINGS
     ================================================== -->
 
-    <div id="adminListings"></div>
+    <section id="propertyListingsSection">
+
+      <div class="admin-section-head">
+
+        <div>
+
+          <p class="eyebrow">
+            PROPERTY LISTINGS
+          </p>
+
+          <h2>
+            Your properties
+          </h2>
+
+        </div>
+
+      </div>
+
+
+      <div
+        id="propertyFilterBar"
+        class="admin-filter-bar hidden"
+      >
+
+        <span
+          id="propertyFilterLabel"
+          class="admin-filter-label"
+        ></span>
+
+        <button
+          id="clearPropertyFilterBtn"
+          class="admin-filter-clear"
+          type="button"
+        >
+          Show all
+        </button>
+
+      </div>
+
+
+      <div id="adminListings"></div>
+
+    </section>
 
 
     <!-- =================================================
          CUSTOMER INQUIRIES
     ================================================== -->
 
-    <section class="admin-inquiries">
+    <section
+      id="inquiriesSection"
+      class="admin-inquiries"
+    >
 
       <div class="admin-section-head">
 
@@ -630,6 +798,28 @@
         </button>
 
       </div>
+
+
+      <div
+        id="inquiryFilterBar"
+        class="admin-filter-bar hidden"
+      >
+
+        <span
+          id="inquiryFilterLabel"
+          class="admin-filter-label"
+        ></span>
+
+        <button
+          id="clearInquiryFilterBtn"
+          class="admin-filter-clear"
+          type="button"
+        >
+          Show all
+        </button>
+
+      </div>
+
 
       <div id="adminInquiries">
 
