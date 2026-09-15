@@ -5,6 +5,11 @@ const count = document.getElementById("listingCount");
 let allProperties = [];
 const activeSlides = {};
 
+
+// ==================================================
+// HELPERS
+// ==================================================
+
 function esc(value) {
   return String(value ?? "").replace(
     /[&<>"']/g,
@@ -18,6 +23,7 @@ function esc(value) {
   );
 }
 
+
 function money(value) {
   const number = Number(value);
 
@@ -29,6 +35,7 @@ function money(value) {
       }).format(number)
     : "";
 }
+
 
 function normalizeProperty(property) {
   return {
@@ -88,6 +95,7 @@ function normalizeProperty(property) {
   };
 }
 
+
 function formatStatus(status) {
   const value = String(status || "For Sale").trim();
 
@@ -100,6 +108,11 @@ function formatStatus(status) {
     .replace(/\s+/g, " ")
     .replace(/\b\w/g, letter => letter.toUpperCase());
 }
+
+
+// ==================================================
+// PROPERTY IMAGES
+// ==================================================
 
 function renderPropertyImages(property) {
   const images = property.image_urls;
@@ -168,6 +181,7 @@ function renderPropertyImages(property) {
       class="property-img property-gallery"
       data-gallery-id="${esc(property.id)}"
     >
+
       <img
         class="property-gallery-image"
         src="${esc(firstImage)}"
@@ -183,9 +197,15 @@ function renderPropertyImages(property) {
 
       ${arrows}
       ${dots}
+
     </div>
   `;
 }
+
+
+// ==================================================
+// RENDER PROPERTIES
+// ==================================================
 
 function render(list) {
   count.textContent =
@@ -219,12 +239,16 @@ function render(list) {
 
     const beds =
       Number(p.bedrooms) > 0
-        ? `${esc(p.bedrooms)} bed${Number(p.bedrooms) === 1 ? "" : "s"}`
+        ? `${esc(p.bedrooms)} bed${
+            Number(p.bedrooms) === 1 ? "" : "s"
+          }`
         : "— beds";
 
     const baths =
       Number(p.bathrooms) > 0
-        ? `${esc(p.bathrooms)} bath${Number(p.bathrooms) === 1 ? "" : "s"}`
+        ? `${esc(p.bathrooms)} bath${
+            Number(p.bathrooms) === 1 ? "" : "s"
+          }`
         : "— baths";
 
     const sqft =
@@ -240,6 +264,7 @@ function render(list) {
       <div class="property-body">
 
         <div class="property-card-meta">
+
           <span class="status">
             ${esc(status)}
           </span>
@@ -247,6 +272,7 @@ function render(list) {
           <span class="property-type">
             ${propertyType}
           </span>
+
         </div>
 
         <div class="property-top">
@@ -263,7 +289,10 @@ function render(list) {
 
         <div class="property-location">
           <span aria-hidden="true">⌖</span>
-          ${esc(p.location || "Location available on request")}
+          ${esc(
+            p.location ||
+            "Location available on request"
+          )}
         </div>
 
         <div class="stats">
@@ -300,12 +329,21 @@ function render(list) {
   });
 }
 
+
+// ==================================================
+// PROPERTY GALLERY
+// ==================================================
+
 function changeSlide(propertyId, direction) {
   const property = allProperties.find(
-    item => String(item.id) === String(propertyId)
+    item =>
+      String(item.id) === String(propertyId)
   );
 
-  if (!property || property.image_urls.length <= 1) {
+  if (
+    !property ||
+    property.image_urls.length <= 1
+  ) {
     return;
   }
 
@@ -327,12 +365,17 @@ function changeSlide(propertyId, direction) {
   showSlide(propertyId, current);
 }
 
+
 function showSlide(propertyId, index) {
   const property = allProperties.find(
-    item => String(item.id) === String(propertyId)
+    item =>
+      String(item.id) === String(propertyId)
   );
 
-  if (!property || !property.image_urls.length) {
+  if (
+    !property ||
+    !property.image_urls.length
+  ) {
     return;
   }
 
@@ -350,7 +393,9 @@ function showSlide(propertyId, index) {
 
   const gallery =
     document.querySelector(
-      `[data-gallery-id="${CSS.escape(String(propertyId))}"]`
+      `[data-gallery-id="${CSS.escape(
+        String(propertyId)
+      )}"]`
     );
 
   if (!gallery) {
@@ -359,11 +404,14 @@ function showSlide(propertyId, index) {
 
   const image =
     gallery.querySelector(
-      `[data-gallery-image="${CSS.escape(String(propertyId))}"]`
+      `[data-gallery-image="${CSS.escape(
+        String(propertyId)
+      )}"]`
     );
 
   if (image) {
     image.src = images[index];
+
     image.alt =
       `${property.title} - Photo ${index + 1}`;
   }
@@ -378,7 +426,13 @@ function showSlide(propertyId, index) {
     });
 }
 
+
+// ==================================================
+// GALLERY CLICK EVENTS
+// ==================================================
+
 grid.addEventListener("click", event => {
+
   const arrow =
     event.target.closest(
       ".property-photo-arrow"
@@ -416,20 +470,30 @@ grid.addEventListener("click", event => {
   }
 });
 
+
+// ==================================================
+// LOAD PROPERTIES
+// ==================================================
+
 async function loadProperties() {
+
   try {
+
     grid.innerHTML =
       `<div class="loading">Loading properties...</div>`;
 
     empty.classList.add("hidden");
 
     const response =
-      await fetch("/api/properties", {
-        headers: {
-          Accept: "application/json"
-        },
-        cache: "no-store"
-      });
+      await fetch(
+        "/api/properties",
+        {
+          headers: {
+            Accept: "application/json"
+          },
+          cache: "no-store"
+        }
+      );
 
     if (!response.ok) {
       throw new Error(
@@ -447,7 +511,9 @@ async function loadProperties() {
     }
 
     allProperties =
-      properties.map(normalizeProperty);
+      properties.map(
+        normalizeProperty
+      );
 
     render(allProperties);
 
@@ -460,7 +526,8 @@ async function loadProperties() {
 
     allProperties = [];
 
-    count.textContent = "0 listings";
+    count.textContent =
+      "0 listings";
 
     grid.innerHTML = `
       <div class="loading">
@@ -473,96 +540,284 @@ async function loadProperties() {
   }
 }
 
+
+// ==================================================
+// HOMEPAGE SEARCH
+// ==================================================
+
 function search() {
-  const locationInput =
-    document
-      .getElementById("searchLocation")
-      .value
-      .trim()
-      .toLowerCase();
 
-  const type =
-    document
-      .getElementById("searchType")
-      .value;
-
-  const maxPrice =
-    Number(
-      document
-        .getElementById("searchPrice")
-        .value || 0
+  const locationElement =
+    document.getElementById(
+      "searchLocation"
     );
 
+  const typeElement =
+    document.getElementById(
+      "searchType"
+    );
+
+  const priceElement =
+    document.getElementById(
+      "searchPrice"
+    );
+
+
+  const locationInput =
+    locationElement
+      ? locationElement.value
+          .trim()
+          .toLowerCase()
+      : "";
+
+
+  const type =
+    typeElement
+      ? typeElement.value
+          .trim()
+          .toLowerCase()
+      : "";
+
+
+  const maxPrice =
+    priceElement
+      ? Number(
+          priceElement.value || 0
+        )
+      : 0;
+
+
   const filtered =
-    allProperties.filter(property => {
+    allProperties.filter(
+      property => {
 
-      const p =
-        normalizeProperty(property);
+        const p =
+          normalizeProperty(
+            property
+          );
 
-      return (
 
-        (
+        const propertyLocation =
+          String(
+            p.location || ""
+          )
+            .trim()
+            .toLowerCase();
+
+
+        const propertyType =
+          String(
+            p.property_type || ""
+          )
+            .trim()
+            .toLowerCase();
+
+
+        const propertyPrice =
+          Number(
+            p.price || 0
+          );
+
+
+        const matchesLocation =
           !locationInput ||
-          String(p.location)
-            .toLowerCase()
-            .includes(locationInput)
-        )
+          propertyLocation.includes(
+            locationInput
+          );
 
-        &&
 
-        (
+        const matchesType =
           !type ||
-          String(p.property_type)
-            .toLowerCase()
-            === type.toLowerCase()
-        )
+          propertyType === type;
 
-        &&
 
-        (
+        const matchesPrice =
           !maxPrice ||
-          Number(p.price || 0)
-            <= maxPrice
-        )
+          propertyPrice <= maxPrice;
 
-      );
-    });
+
+        return (
+          matchesLocation &&
+          matchesType &&
+          matchesPrice
+        );
+      }
+    );
+
 
   render(filtered);
 }
 
-document
-  .getElementById("searchBtn")
-  .addEventListener(
+
+// ==================================================
+// SEARCH BUTTON
+// ==================================================
+
+const searchButton =
+  document.getElementById(
+    "searchBtn"
+  );
+
+if (searchButton) {
+
+  searchButton.addEventListener(
     "click",
     search
   );
+}
 
-document
-  .getElementById("searchLocation")
-  .addEventListener(
+
+// ==================================================
+// LOCATION ENTER KEY
+// ==================================================
+
+const searchLocation =
+  document.getElementById(
+    "searchLocation"
+  );
+
+if (searchLocation) {
+
+  searchLocation.addEventListener(
     "keydown",
     event => {
-      if (event.key === "Enter") {
+
+      if (
+        event.key === "Enter"
+      ) {
+
         event.preventDefault();
+
         search();
       }
     }
   );
+}
 
-loadProperties();
 
-document
-  .getElementById("contactForm")
-  .addEventListener(
+// ==================================================
+// CLEAR SEARCH WHEN INPUTS ARE EMPTIED
+// ==================================================
+
+function clearSearchIfEmpty() {
+
+  const location =
+    document.getElementById(
+      "searchLocation"
+    );
+
+  const type =
+    document.getElementById(
+      "searchType"
+    );
+
+  const price =
+    document.getElementById(
+      "searchPrice"
+    );
+
+
+  const locationEmpty =
+    !location ||
+    !location.value.trim();
+
+
+  const typeEmpty =
+    !type ||
+    !type.value;
+
+
+  const priceEmpty =
+    !price ||
+    !price.value;
+
+
+  if (
+    locationEmpty &&
+    typeEmpty &&
+    priceEmpty
+  ) {
+    render(allProperties);
+  }
+}
+
+
+if (searchLocation) {
+
+  searchLocation.addEventListener(
+    "input",
+    clearSearchIfEmpty
+  );
+}
+
+
+const searchType =
+  document.getElementById(
+    "searchType"
+  );
+
+if (searchType) {
+
+  searchType.addEventListener(
+    "change",
+    () => {
+
+      if (!searchType.value) {
+        clearSearchIfEmpty();
+      }
+    }
+  );
+}
+
+
+const searchPrice =
+  document.getElementById(
+    "searchPrice"
+  );
+
+if (searchPrice) {
+
+  searchPrice.addEventListener(
+    "input",
+    clearSearchIfEmpty
+  );
+}
+
+
+// ==================================================
+// CONTACT FORM
+// ==================================================
+
+const contactForm =
+  document.getElementById(
+    "contactForm"
+  );
+
+if (contactForm) {
+
+  contactForm.addEventListener(
     "submit",
     event => {
 
       event.preventDefault();
 
-      document.getElementById(
-        "formMessage"
-      ).textContent =
-        "Thanks — your inquiry is ready. Connect this form to your preferred email/CRM when you're ready to receive leads.";
+      const formMessage =
+        document.getElementById(
+          "formMessage"
+        );
+
+      if (formMessage) {
+
+        formMessage.textContent =
+          "Thanks — your inquiry is ready. Connect this form to your preferred email/CRM when you're ready to receive leads.";
+      }
     }
   );
+}
+
+
+// ==================================================
+// START
+// ==================================================
+
+loadProperties();
