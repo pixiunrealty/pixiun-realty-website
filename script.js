@@ -1,14 +1,10 @@
 const grid = document.getElementById("propertyGrid");
+const featuredGrid = document.getElementById("featuredGrid");
 const empty = document.getElementById("emptyState");
 const count = document.getElementById("listingCount");
 
 let allProperties = [];
 const activeSlides = {};
-
-
-// ==================================================
-// HELPERS
-// ==================================================
 
 function esc(value) {
   return String(value ?? "").replace(
@@ -23,7 +19,6 @@ function esc(value) {
   );
 }
 
-
 function money(value) {
   const number = Number(value);
 
@@ -35,7 +30,6 @@ function money(value) {
       }).format(number)
     : "";
 }
-
 
 function normalizeProperty(property) {
   return {
@@ -91,10 +85,14 @@ function normalizeProperty(property) {
         ? property.image_urls.filter(Boolean)
         : property.image_url
           ? [property.image_url]
-          : []
+          : [],
+
+    created_at:
+      property.created_at ??
+      property.Created_at ??
+      ""
   };
 }
-
 
 function formatStatus(status) {
   const value = String(status || "For Sale").trim();
@@ -108,11 +106,6 @@ function formatStatus(status) {
     .replace(/\s+/g, " ")
     .replace(/\b\w/g, letter => letter.toUpperCase());
 }
-
-
-// ==================================================
-// PROPERTY IMAGES
-// ==================================================
 
 function renderPropertyImages(property) {
   const images = property.image_urls;
@@ -181,7 +174,6 @@ function renderPropertyImages(property) {
       class="property-img property-gallery"
       data-gallery-id="${esc(property.id)}"
     >
-
       <img
         class="property-gallery-image"
         src="${esc(firstImage)}"
@@ -197,15 +189,140 @@ function renderPropertyImages(property) {
 
       ${arrows}
       ${dots}
-
     </div>
   `;
 }
 
+function createPropertyCard(property) {
+  const p = normalizeProperty(property);
 
-// ==================================================
-// RENDER PROPERTIES
-// ==================================================
+  activeSlides[p.id] = 0;
+
+  const card = document.createElement("article");
+
+  card.className = "property";
+
+  const status = formatStatus(p.status);
+
+  const propertyType = p.property_type
+    ? esc(p.property_type)
+    : "Property";
+
+  const beds =
+    Number(p.bedrooms) > 0
+      ? `${esc(p.bedrooms)} bed${Number(p.bedrooms) === 1 ? "" : "s"}`
+      : "— beds";
+
+  const baths =
+    Number(p.bathrooms) > 0
+      ? `${esc(p.bathrooms)} bath${Number(p.bathrooms) === 1 ? "" : "s"}`
+      : "— baths";
+
+  const sqft =
+    Number(p.square_feet) > 0
+      ? `${new Intl.NumberFormat("en-US").format(
+          Number(p.square_feet)
+        )} sqft`
+      : "— sqft";
+
+  card.innerHTML = `
+    ${renderPropertyImages(p)}
+
+    <div class="property-body">
+
+      <div class="property-card-meta">
+        <span class="status">
+          ${esc(status)}
+        </span>
+
+        <span class="property-type">
+          ${propertyType}
+        </span>
+      </div>
+
+      <div class="property-top">
+
+        <div class="property-title">
+          ${esc(p.title)}
+        </div>
+
+        <div class="price">
+          ${money(p.price)}
+        </div>
+
+      </div>
+
+      <div class="property-location">
+        <span aria-hidden="true">⌖</span>
+        ${esc(p.location || "Location available on request")}
+      </div>
+
+      <div class="stats">
+
+        <span>
+          <strong>🛏</strong>
+          ${beds}
+        </span>
+
+        <span>
+          <strong>🛁</strong>
+          ${baths}
+        </span>
+
+        <span>
+          <strong>📐</strong>
+          ${sqft}
+        </span>
+
+      </div>
+
+      <a
+        class="property-view"
+        href="/property.html?id=${encodeURIComponent(p.id)}"
+      >
+        <span>View property</span>
+        <span aria-hidden="true">→</span>
+      </a>
+
+    </div>
+  `;
+
+  return card;
+}
+
+function renderFeatured(list) {
+  if (!featuredGrid) {
+    return;
+  }
+
+  featuredGrid.innerHTML = "";
+
+  const featured = list
+    .slice()
+    .sort((a, b) => {
+      const dateA = new Date(a.created_at || 0).getTime();
+      const dateB = new Date(b.created_at || 0).getTime();
+
+      return dateB - dateA;
+    })
+    .slice(0, 3);
+
+  if (!featured.length) {
+    featuredGrid.innerHTML = `
+      <div class="loading">
+        Featured properties will appear here soon.
+      </div>
+    `;
+
+    return;
+  }
+
+  featured.forEach(property => {
+    featuredGrid.appendChild(
+      createPropertyCard(property)
+    );
+  });
+}
 
 function render(list) {
   count.textContent =
@@ -223,127 +340,18 @@ function render(list) {
   }
 
   list.forEach(property => {
-    const p = normalizeProperty(property);
-
-    activeSlides[p.id] = 0;
-
-    const card = document.createElement("article");
-
-    card.className = "property";
-
-    const status = formatStatus(p.status);
-
-    const propertyType = p.property_type
-      ? esc(p.property_type)
-      : "Property";
-
-    const beds =
-      Number(p.bedrooms) > 0
-        ? `${esc(p.bedrooms)} bed${
-            Number(p.bedrooms) === 1 ? "" : "s"
-          }`
-        : "— beds";
-
-    const baths =
-      Number(p.bathrooms) > 0
-        ? `${esc(p.bathrooms)} bath${
-            Number(p.bathrooms) === 1 ? "" : "s"
-          }`
-        : "— baths";
-
-    const sqft =
-      Number(p.square_feet) > 0
-        ? `${new Intl.NumberFormat("en-US").format(
-            Number(p.square_feet)
-          )} sqft`
-        : "— sqft";
-
-    card.innerHTML = `
-      ${renderPropertyImages(p)}
-
-      <div class="property-body">
-
-        <div class="property-card-meta">
-
-          <span class="status">
-            ${esc(status)}
-          </span>
-
-          <span class="property-type">
-            ${propertyType}
-          </span>
-
-        </div>
-
-        <div class="property-top">
-
-          <div class="property-title">
-            ${esc(p.title)}
-          </div>
-
-          <div class="price">
-            ${money(p.price)}
-          </div>
-
-        </div>
-
-        <div class="property-location">
-          <span aria-hidden="true">⌖</span>
-          ${esc(
-            p.location ||
-            "Location available on request"
-          )}
-        </div>
-
-        <div class="stats">
-
-          <span>
-            <strong>🛏</strong>
-            ${beds}
-          </span>
-
-          <span>
-            <strong>🛁</strong>
-            ${baths}
-          </span>
-
-          <span>
-            <strong>📐</strong>
-            ${sqft}
-          </span>
-
-        </div>
-
-        <a
-          class="property-view"
-          href="/property.html?id=${encodeURIComponent(p.id)}"
-        >
-          <span>View property</span>
-          <span aria-hidden="true">→</span>
-        </a>
-
-      </div>
-    `;
-
-    grid.appendChild(card);
+    grid.appendChild(
+      createPropertyCard(property)
+    );
   });
 }
 
-
-// ==================================================
-// PROPERTY GALLERY
-// ==================================================
-
 function changeSlide(propertyId, direction) {
   const property = allProperties.find(
-    item =>
-      String(item.id) === String(propertyId)
+    item => String(item.id) === String(propertyId)
   );
 
-  if (
-    !property ||
-    property.image_urls.length <= 1
-  ) {
+  if (!property || property.image_urls.length <= 1) {
     return;
   }
 
@@ -365,17 +373,12 @@ function changeSlide(propertyId, direction) {
   showSlide(propertyId, current);
 }
 
-
 function showSlide(propertyId, index) {
   const property = allProperties.find(
-    item =>
-      String(item.id) === String(propertyId)
+    item => String(item.id) === String(propertyId)
   );
 
-  if (
-    !property ||
-    !property.image_urls.length
-  ) {
+  if (!property || !property.image_urls.length) {
     return;
   }
 
@@ -391,48 +394,36 @@ function showSlide(propertyId, index) {
 
   activeSlides[propertyId] = index;
 
-  const gallery =
-    document.querySelector(
-      `[data-gallery-id="${CSS.escape(
-        String(propertyId)
-      )}"]`
+  const galleries =
+    document.querySelectorAll(
+      `[data-gallery-id="${CSS.escape(String(propertyId))}"]`
     );
 
-  if (!gallery) {
-    return;
-  }
-
-  const image =
-    gallery.querySelector(
-      `[data-gallery-image="${CSS.escape(
-        String(propertyId)
-      )}"]`
-    );
-
-  if (image) {
-    image.src = images[index];
-
-    image.alt =
-      `${property.title} - Photo ${index + 1}`;
-  }
-
-  gallery
-    .querySelectorAll(".property-photo-dot")
-    .forEach((dot, dotIndex) => {
-      dot.classList.toggle(
-        "active",
-        dotIndex === index
+  galleries.forEach(gallery => {
+    const image =
+      gallery.querySelector(
+        `[data-gallery-image="${CSS.escape(String(propertyId))}"]`
       );
-    });
+
+    if (image) {
+      image.src = images[index];
+
+      image.alt =
+        `${property.title} - Photo ${index + 1}`;
+    }
+
+    gallery
+      .querySelectorAll(".property-photo-dot")
+      .forEach((dot, dotIndex) => {
+        dot.classList.toggle(
+          "active",
+          dotIndex === index
+        );
+      });
+  });
 }
 
-
-// ==================================================
-// GALLERY CLICK EVENTS
-// ==================================================
-
-grid.addEventListener("click", event => {
-
+function handleGalleryClick(event) {
   const arrow =
     event.target.closest(
       ".property-photo-arrow"
@@ -440,6 +431,7 @@ grid.addEventListener("click", event => {
 
   if (arrow) {
     event.preventDefault();
+    event.stopPropagation();
 
     const propertyId =
       arrow.dataset.propertyId;
@@ -462,38 +454,46 @@ grid.addEventListener("click", event => {
 
   if (dot) {
     event.preventDefault();
+    event.stopPropagation();
 
     showSlide(
       dot.dataset.propertyId,
       Number(dot.dataset.slide)
     );
   }
-});
+}
 
+grid.addEventListener(
+  "click",
+  handleGalleryClick
+);
 
-// ==================================================
-// LOAD PROPERTIES
-// ==================================================
+if (featuredGrid) {
+  featuredGrid.addEventListener(
+    "click",
+    handleGalleryClick
+  );
+}
 
 async function loadProperties() {
-
   try {
-
     grid.innerHTML =
       `<div class="loading">Loading properties...</div>`;
+
+    if (featuredGrid) {
+      featuredGrid.innerHTML =
+        `<div class="loading">Loading featured properties...</div>`;
+    }
 
     empty.classList.add("hidden");
 
     const response =
-      await fetch(
-        "/api/properties",
-        {
-          headers: {
-            Accept: "application/json"
-          },
-          cache: "no-store"
-        }
-      );
+      await fetch("/api/properties", {
+        headers: {
+          Accept: "application/json"
+        },
+        cache: "no-store"
+      });
 
     if (!response.ok) {
       throw new Error(
@@ -511,9 +511,9 @@ async function loadProperties() {
     }
 
     allProperties =
-      properties.map(
-        normalizeProperty
-      );
+      properties.map(normalizeProperty);
+
+    renderFeatured(allProperties);
 
     render(allProperties);
 
@@ -526,8 +526,7 @@ async function loadProperties() {
 
     allProperties = [];
 
-    count.textContent =
-      "0 listings";
+    count.textContent = "0 listings";
 
     grid.innerHTML = `
       <div class="loading">
@@ -536,288 +535,108 @@ async function loadProperties() {
       </div>
     `;
 
+    if (featuredGrid) {
+      featuredGrid.innerHTML = `
+        <div class="loading">
+          Featured properties are temporarily unavailable.
+        </div>
+      `;
+    }
+
     empty.classList.add("hidden");
   }
 }
 
-
-// ==================================================
-// HOMEPAGE SEARCH
-// ==================================================
-
 function search() {
-
-  const locationElement =
-    document.getElementById(
-      "searchLocation"
-    );
-
-  const typeElement =
-    document.getElementById(
-      "searchType"
-    );
-
-  const priceElement =
-    document.getElementById(
-      "searchPrice"
-    );
-
-
   const locationInput =
-    locationElement
-      ? locationElement.value
-          .trim()
-          .toLowerCase()
-      : "";
-
+    document
+      .getElementById("searchLocation")
+      .value
+      .trim()
+      .toLowerCase();
 
   const type =
-    typeElement
-      ? typeElement.value
-          .trim()
-          .toLowerCase()
-      : "";
-
+    document
+      .getElementById("searchType")
+      .value;
 
   const maxPrice =
-    priceElement
-      ? Number(
-          priceElement.value || 0
-        )
-      : 0;
-
-
-  const filtered =
-    allProperties.filter(
-      property => {
-
-        const p =
-          normalizeProperty(
-            property
-          );
-
-
-        const propertyLocation =
-          String(
-            p.location || ""
-          )
-            .trim()
-            .toLowerCase();
-
-
-        const propertyType =
-          String(
-            p.property_type || ""
-          )
-            .trim()
-            .toLowerCase();
-
-
-        const propertyPrice =
-          Number(
-            p.price || 0
-          );
-
-
-        const matchesLocation =
-          !locationInput ||
-          propertyLocation.includes(
-            locationInput
-          );
-
-
-        const matchesType =
-          !type ||
-          propertyType === type;
-
-
-        const matchesPrice =
-          !maxPrice ||
-          propertyPrice <= maxPrice;
-
-
-        return (
-          matchesLocation &&
-          matchesType &&
-          matchesPrice
-        );
-      }
+    Number(
+      document
+        .getElementById("searchPrice")
+        .value || 0
     );
 
+  const filtered =
+    allProperties.filter(property => {
+
+      const p =
+        normalizeProperty(property);
+
+      return (
+
+        (
+          !locationInput ||
+          String(p.location)
+            .toLowerCase()
+            .includes(locationInput)
+        )
+
+        &&
+
+        (
+          !type ||
+          String(p.property_type)
+            .toLowerCase()
+            === type.toLowerCase()
+        )
+
+        &&
+
+        (
+          !maxPrice ||
+          Number(p.price || 0)
+            <= maxPrice
+        )
+
+      );
+    });
 
   render(filtered);
 }
 
-
-// ==================================================
-// SEARCH BUTTON
-// ==================================================
-
-const searchButton =
-  document.getElementById(
-    "searchBtn"
-  );
-
-if (searchButton) {
-
-  searchButton.addEventListener(
+document
+  .getElementById("searchBtn")
+  .addEventListener(
     "click",
     search
   );
-}
 
-
-// ==================================================
-// LOCATION ENTER KEY
-// ==================================================
-
-const searchLocation =
-  document.getElementById(
-    "searchLocation"
-  );
-
-if (searchLocation) {
-
-  searchLocation.addEventListener(
+document
+  .getElementById("searchLocation")
+  .addEventListener(
     "keydown",
     event => {
-
-      if (
-        event.key === "Enter"
-      ) {
-
+      if (event.key === "Enter") {
         event.preventDefault();
-
         search();
       }
     }
   );
-}
 
+loadProperties();
 
-// ==================================================
-// CLEAR SEARCH WHEN INPUTS ARE EMPTIED
-// ==================================================
-
-function clearSearchIfEmpty() {
-
-  const location =
-    document.getElementById(
-      "searchLocation"
-    );
-
-  const type =
-    document.getElementById(
-      "searchType"
-    );
-
-  const price =
-    document.getElementById(
-      "searchPrice"
-    );
-
-
-  const locationEmpty =
-    !location ||
-    !location.value.trim();
-
-
-  const typeEmpty =
-    !type ||
-    !type.value;
-
-
-  const priceEmpty =
-    !price ||
-    !price.value;
-
-
-  if (
-    locationEmpty &&
-    typeEmpty &&
-    priceEmpty
-  ) {
-    render(allProperties);
-  }
-}
-
-
-if (searchLocation) {
-
-  searchLocation.addEventListener(
-    "input",
-    clearSearchIfEmpty
-  );
-}
-
-
-const searchType =
-  document.getElementById(
-    "searchType"
-  );
-
-if (searchType) {
-
-  searchType.addEventListener(
-    "change",
-    () => {
-
-      if (!searchType.value) {
-        clearSearchIfEmpty();
-      }
-    }
-  );
-}
-
-
-const searchPrice =
-  document.getElementById(
-    "searchPrice"
-  );
-
-if (searchPrice) {
-
-  searchPrice.addEventListener(
-    "input",
-    clearSearchIfEmpty
-  );
-}
-
-
-// ==================================================
-// CONTACT FORM
-// ==================================================
-
-const contactForm =
-  document.getElementById(
-    "contactForm"
-  );
-
-if (contactForm) {
-
-  contactForm.addEventListener(
+document
+  .getElementById("contactForm")
+  .addEventListener(
     "submit",
     event => {
 
       event.preventDefault();
 
-      const formMessage =
-        document.getElementById(
-          "formMessage"
-        );
-
-      if (formMessage) {
-
-        formMessage.textContent =
-          "Thanks — your inquiry is ready. Connect this form to your preferred email/CRM when you're ready to receive leads.";
-      }
+      document.getElementById(
+        "formMessage"
+      ).textContent =
+        "Thanks — your inquiry is ready. Connect this form to your preferred email/CRM when you're ready to receive leads.";
     }
   );
-}
-
-
-// ==================================================
-// START
-// ==================================================
-
-loadProperties();
